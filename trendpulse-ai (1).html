@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendPulse AI — Predict Viral Trends Before They Explode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ─────────────────────────────────────────────
+   ROOT VARIABLES
+───────────────────────────────────────────── */
+:root {
+  --bg-void:#04040a; --bg-deep:#080810; --bg-surface:#0d0d1a;
+  --bg-card:#10101f; --bg-card-h:#141428;
+  --border:rgba(255,255,255,0.06); --border-b:rgba(100,120,255,0.3);
+  --blue:#4f6eff; --blue-b:#7b93ff;
+  --cyan:#00e5ff; --cyan-d:#00b8cc;
+  --purple:#9b5de5; --purple-b:#bf80ff;
+  --pink:#ff2d9b; --green:#00ff88;
+  --amber:#ffb800; --red:#ff3d5a;
+  --text-1:#f0f0fa; --text-2:rgba(240,240,250,.55); --text-3:rgba(240,240,250,.3);
+  --glow-b:0 0 40px rgba(79,110,255,.35);
+  --glow-c:0 0 40px rgba(0,229,255,.3);
+  --glow-p:0 0 40px rgba(255,45,155,.3);
+  --r-sm:8px; --r-md:14px; --r-lg:20px; --r-xl:28px;
+  --ff-d:'Syne',sans-serif; --ff-m:'Space Mono',monospace; --ff-b:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg-void);color:var(--text-1);font-family:var(--ff-b);font-size:15px;line-height:1.6;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg-void)}
+::-webkit-scrollbar-thumb{background:rgba(79,110,255,.3);border-radius:99px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.02;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px}
+
+/* ─── LOADER ─── */
+#loader{position:fixed;inset:0;background:var(--bg-void);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .6s,visibility .6s}
+#loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.ld-logo{font-family:var(--ff-d);font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--cyan),var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ld-steps{font-family:var(--ff-m);font-size:11px;color:var(--cyan);letter-spacing:1px;min-height:18px;text-align:center}
+.ld-bar-w{width:260px;height:3px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}
+.ld-bar{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--purple));border-radius:99px;box-shadow:0 0 12px var(--cyan);transition:width .3s ease}
+
+/* ─── MODAL OVERLAY ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(4,4,10,.85);backdrop-filter:blur(12px);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.modal-overlay.open{opacity:1;visibility:visible}
+.modal{background:var(--bg-card);border:1px solid var(--border-b);border-radius:var(--r-xl);padding:32px;width:100%;max-width:560px;position:relative;max-height:90vh;overflow-y:auto}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;background:rgba(255,255,255,.06);border:none;border-radius:8px;color:var(--text-2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:rgba(255,61,90,.15);color:var(--red)}
+.modal-title{font-family:var(--ff-d);font-size:20px;font-weight:800;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--text-2);margin-bottom:24px}
+
+/* ─── FORM ELEMENTS ─── */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-family:var(--ff-m);color:var(--text-2);letter-spacing:.5px;margin-bottom:7px}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--text-1);font-family:var(--ff-b);font-size:14px;outline:none;transition:border .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(79,110,255,.15)}
+.form-select{-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(240,240,250,.4)'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:calc(100% - 14px) center;cursor:pointer}
+.form-select option{background:var(--bg-card)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-hint{font-size:11px;color:var(--text-3);margin-top:5px;font-family:var(--ff-m)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ─── STATUS BADGE ─── */
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:11px;font-family:var(--ff-m);font-weight:700}
+.status-badge.connected{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25)}
+.status-badge.error{background:rgba(255,61,90,.1);color:var(--red);border:1px solid rgba(255,61,90,.25)}
+.status-badge.idle{background:rgba(255,255,255,.05);color:var(--text-2);border:1px solid var(--border)}
+.status-badge.scanning{background:rgba(0,229,255,.1);color:var(--cyan);border:1px solid rgba(0,229,255,.25)}
+
+/* ─── TABS ─── */
+.page-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:0;gap:0}
+.page-tab{padding:14px 22px;font-size:13px;font-weight:600;font-family:var(--ff-b);color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;white-space:nowrap}
+.page-tab.active{color:var(--text-1);border-bottom-color:var(--cyan)}
+.page-tab:hover:not(.active){color:var(--text-1)}
+.page-panel{display:none}.page-panel.active{display:block}
+
+/* ─── NAV ─── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(4,4,10,.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);transition:all .3s}
+nav.scrolled{background:rgba(4,4,10,.97);box-shadow:0 1px 30px rgba(0,0,0,.5)}
+.nav-logo{font-family:var(--ff-d);font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:9px;cursor:pointer;text-decoration:none}
+.nav-logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--cyan),var(--blue));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;-webkit-text-fill-color:initial}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-2);text-decoration:none;cursor:pointer;transition:color .2s}
+.nav-links a:hover{color:var(--text-1)}
+.nav-cta{display:flex;align-items:center;gap:10px}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:9px;font-size:13px;font-weight:600;font-family:var(--ff-b);cursor:pointer;transition:all .2s ease;border:none;text-decoration:none;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--border-b);color:var(--text-1);background:rgba(79,110,255,.08)}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;box-shadow:0 0 20px rgba(79,110,255,.4)}
+.btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 30px rgba(79,110,255,.6)}
+.btn-pink{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;box-shadow:0 0 20px rgba(255,45,155,.35)}
+.btn-pink:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 35px rgba(255,45,155,.5)}
+.btn-red{background:rgba(255,61,90,.15);border:1px solid rgba(255,61,90,.3);color:var(--red)}
+.btn-red:hover:not(:disabled){background:rgba(255,61,90,.25)}
+.btn-green{background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.3);color:var(--green)}
+.btn-green:hover:not(:disabled){background:rgba(0,255,136,.22)}
+.btn-lg{padding:13px 30px;font-size:15px;border-radius:12px}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:7px}
+.btn-icon{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px}
+.btn-spin .spin-icon{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── TOAST ─── */
+#toast-container{position:fixed;top:76px;right:20px;z-index:8000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--bg-card);border:1px solid var(--border-b);border-radius:var(--r-md);padding:11px 15px;display:flex;align-items:flex-start;gap:9px;min-width:270px;max-width:340px;backdrop-filter:blur(20px);box-shadow:var(--glow-b);animation:toastIn .4s cubic-bezier(.34,1.56,.64,1) forwards;pointer-events:auto}
+.toast.out{animation:toastOut .3s ease forwards}
+@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{to{transform:translateX(110%);opacity:0}}
+.t-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.t-dot.blue{background:var(--blue);box-shadow:0 0 6px var(--blue)}
+.t-dot.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+.t-dot.pink{background:var(--pink);box-shadow:0 0 6px var(--pink)}
+.t-dot.green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.t-dot.red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.t-dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.t-title{font-size:12px;font-weight:700;font-family:var(--ff-d);color:var(--text-1);line-height:1.3}
+.t-sub{font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.4}
+
+/* ─── HERO ─── */
+#hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:120px 40px 80px;text-align:center}
+.hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.17;animation:orbFloat 9s ease-in-out infinite}
+.hero-orb-1{width:700px;height:700px;background:var(--blue);top:-200px;left:-200px}
+.hero-orb-2{width:500px;height:500px;background:var(--purple);top:100px;right:-150px;animation-delay:2s}
+.hero-orb-3{width:400px;height:400px;background:var(--cyan);bottom:-100px;left:30%;animation-delay:4s}
+.hero-orb-4{width:300px;height:300px;background:var(--pink);bottom:100px;right:10%;animation-delay:1s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.97)}}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(79,110,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(79,110,255,.04) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black,transparent)}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.3;animation:scanMove 4s linear infinite;z-index:2}
+@keyframes scanMove{0%{top:0}100%{top:100%}}
+.hero-content{position:relative;z-index:1;max-width:860px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(79,110,255,.1);border:1px solid rgba(79,110,255,.3);border-radius:99px;font-size:12px;font-family:var(--ff-m);color:var(--blue-b);letter-spacing:.5px;margin-bottom:28px}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.7}}
+.hero-title{font-family:var(--ff-d);font-size:clamp(38px,5.5vw,76px);font-weight:800;line-height:1.05;letter-spacing:-2px;margin-bottom:22px}
+.grad-text{background:linear-gradient(135deg,var(--cyan) 0%,var(--blue-b) 40%,var(--purple-b) 70%,var(--pink) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(15px,1.8vw,19px);color:var(--text-2);max-width:560px;margin:0 auto 36px;line-height:1.75;font-weight:300}
+.hero-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:52px}
+.hero-stats{display:flex;gap:44px;justify-content:center;flex-wrap:wrap}
+.hero-stat-val{font-family:var(--ff-d);font-size:30px;font-weight:800;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:5px}
+.hero-stat-lbl{font-size:11px;color:var(--text-3);letter-spacing:.5px}
+.live-counter{display:inline-flex;align-items:center;gap:10px;padding:9px 18px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);border-radius:var(--r-md);margin-bottom:22px;font-family:var(--ff-m);font-size:12px;color:var(--cyan)}
+.live-dot{width:6px;height:6px;background:var(--cyan);border-radius:50%;animation:pulse 1s ease infinite}
+
+/* ─── SECTIONS ─── */
+.sec{padding:90px 40px;max-width:1280px;margin:0 auto}
+.sec-full{padding:90px 40px;background:var(--bg-surface)}
+.sec-inner{max-width:1280px;margin:0 auto}
+.eyebrow{font-family:var(--ff-m);font-size:11px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-bottom:14px}
+.sec-title{font-family:var(--ff-d);font-size:clamp(28px,3vw,46px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px}
+.sec-sub{font-size:15px;color:var(--text-2);max-width:500px;line-height:1.75;font-weight:300}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 40px}
+
+/* ─── CARDS ─── */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px;position:relative;overflow:hidden;transition:all .3s ease}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.card:hover{border-color:var(--border-b);transform:translateY(-2px)}
+.card-title{font-family:var(--ff-d);font-size:15px;font-weight:700;margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--text-3);font-family:var(--ff-m);letter-spacing:.3px}
+
+/* ─── GRIDS ─── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.g-main{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+.gap-sm{gap:12px}.gap-lg{gap:28px}
+
+/* ─── API CONFIG PANEL ─── */
+.api-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.api-row:last-child{border-bottom:none}
+.api-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.api-info{flex:1;min-width:0}
+.api-name{font-size:13px;font-weight:600;font-family:var(--ff-d)}
+.api-detail{font-size:11px;color:var(--text-3);font-family:var(--ff-m);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.api-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* ─── SCANNER LOG ─── */
+.log-wrap{background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;height:220px;overflow-y:auto;font-family:var(--ff-m);font-size:11px;display:flex;flex-direction:column;gap:4px}
+.log-line{display:flex;gap:8px;align-items:flex-start;opacity:0;animation:logFade .3s ease forwards}
+@keyframes logFade{to{opacity:1}}
+.log-ts{color:var(--text-3);flex-shrink:0;white-space:nowrap}
+.log-lvl{flex-shrink:0;font-weight:700;padding:0 5px;border-radius:3px;font-size:10px}
+.log-lvl.info{background:rgba(79,110,255,.2);color:var(--blue-b)}
+.log-lvl.ok{background:rgba(0,255,136,.15);color:var(--green)}
+.log-lvl.warn{background:rgba(255,184,0,.15);color:var(--amber)}
+.log-lvl.err{background:rgba(255,61,90,.15);color:var(--red)}
+.log-lvl.scan{background:rgba(0,229,255,.15);color:var(--cyan)}
+.log-msg{color:var(--text-2);line-height:1.5}
+
+/* ─── TREND CARDS ─── */
+.trend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.tcard{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
+.tcard::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0,rgba(79,110,255,.06),transparent 70%);opacity:0;transition:opacity .3s}
+.tcard:hover{transform:translateY(-4px) scale(1.01);border-color:var(--border-b);box-shadow:var(--glow-b)}
+.tcard:hover::before{opacity:1}
+.tcard.hot{border-color:rgba(255,45,155,.25)}.tcard.hot:hover{box-shadow:var(--glow-p)}
+.tcard.rising{border-color:rgba(0,229,255,.2)}.tcard.rising:hover{box-shadow:var(--glow-c)}
+.tcard.live{border-color:rgba(0,255,136,.2)}
+.tcard-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.tcard-tag{font-family:var(--ff-d);font-size:15px;font-weight:700}
+.tcard-src{font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-top:2px}
+.tbadge{padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700;font-family:var(--ff-m);letter-spacing:.3px}
+.tbadge.hot{background:rgba(255,45,155,.15);color:var(--pink);border:1px solid rgba(255,45,155,.3)}
+.tbadge.rising{background:rgba(0,229,255,.1);color:var(--cyan);border:1px solid rgba(0,229,255,.2)}
+.tbadge.peak{background:rgba(255,184,0,.1);color:var(--amber);border:1px solid rgba(255,184,0,.2)}
+.tbadge.new{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.tbadge.live{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.25);animation:pulseBorder 1.5s ease infinite}
+@keyframes pulseBorder{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.3)}50%{box-shadow:0 0 0 3px rgba(0,255,136,.1)}}
+.tcard-spark{height:40px;margin:10px 0}
+.tcard-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.metric{background:rgba(255,255,255,.03);border-radius:var(--r-sm);padding:9px 11px}
+.metric-lbl{font-size:10px;color:var(--text-3);letter-spacing:.5px;margin-bottom:3px;font-family:var(--ff-m)}
+.metric-val{font-size:15px;font-weight:700;font-family:var(--ff-d)}
+.mv-up{color:var(--green)}.mv-dn{color:var(--red)}.mv-bl{color:var(--blue-b)}.mv-cy{color:var(--cyan)}
+.score-row{margin-top:12px}
+.score-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:5px}
+.score-bar{height:4px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.score-fill{height:100%;border-radius:99px;transition:width 1s ease}
+
+/* ─── PLATFORM CARDS ─── */
+.plat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px;transition:all .3s}
+.plat-card:hover{border-color:var(--border-b);transform:translateY(-2px)}
+.plat-head{display:flex;align-items:center;gap:11px;margin-bottom:18px}
+.plat-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.plat-name{font-family:var(--ff-d);font-size:15px;font-weight:700}
+.plat-status{font-size:11px;font-family:var(--ff-m);display:flex;align-items:center;gap:5px}
+.plat-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ps-item{background:rgba(255,255,255,.03);border-radius:var(--r-sm);padding:9px}
+.ps-num{font-family:var(--ff-d);font-size:18px;font-weight:800}
+.ps-lbl{font-size:10px;color:var(--text-3);font-family:var(--ff-m);letter-spacing:.4px;margin-top:2px}
+.spike-row{display:flex;align-items:flex-end;gap:2px;height:36px;margin-top:14px}
+.spike-bar{flex:1;border-radius:2px 2px 0 0;min-height:3px;transition:opacity .2s}
+.spike-bar:hover{opacity:1!important}
+
+/* ─── AI PANEL ─── */
+.prob-bar{height:7px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin-top:5px}
+.prob-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--cyan));box-shadow:0 0 8px rgba(0,229,255,.4);transition:width 1.5s cubic-bezier(.16,1,.3,1)}
+.prob-fill.pink{background:linear-gradient(90deg,var(--pink),var(--purple));box-shadow:0 0 8px rgba(255,45,155,.35)}
+.prob-item{margin-bottom:16px}
+.prob-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.prob-label span:first-child{color:var(--text-2)}
+.prob-label span:last-child{font-family:var(--ff-m);font-size:11px;font-weight:700}
+
+/* ─── CHART CARDS ─── */
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px}
+.chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.chart-title{font-family:var(--ff-d);font-size:14px;font-weight:700}
+.chart-meta{font-size:11px;color:var(--text-3);font-family:var(--ff-m)}
+.chart-badge{font-family:var(--ff-m);font-size:11px;padding:3px 9px;border-radius:99px;font-weight:700}
+.chart-badge.up{background:rgba(0,255,136,.1);color:var(--green)}
+.chart-badge.down{background:rgba(255,61,90,.1);color:var(--red)}
+.c-wrap{position:relative;height:190px}
+.c-wrap-sm{position:relative;height:150px}
+
+/* ─── DISCOVER ─── */
+.niche-item{display:flex;align-items:center;gap:12px;padding:11px;background:rgba(255,255,255,.02);border-radius:var(--r-md);cursor:pointer;transition:all .2s;border:1px solid transparent;margin-bottom:8px}
+.niche-item:last-child{margin-bottom:0}
+.niche-item:hover{background:rgba(79,110,255,.07);border-color:rgba(79,110,255,.2)}
+.niche-emoji{width:38px;height:38px;background:rgba(255,255,255,.04);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.niche-info{flex:1;min-width:0}
+.niche-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.niche-meta{font-size:11px;color:var(--text-3);font-family:var(--ff-m)}
+.niche-score{font-family:var(--ff-m);font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px}
+.ns-h{background:rgba(0,255,136,.1);color:var(--green)}.ns-m{background:rgba(255,184,0,.1);color:var(--amber)}
+.sound-chip{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 13px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:all .2s;margin-bottom:8px}
+.sound-chip:hover{border-color:rgba(155,93,229,.4);background:rgba(155,93,229,.05)}
+.sound-play{width:28px;height:28px;background:linear-gradient(135deg,var(--purple),var(--blue));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;cursor:pointer;border:none;color:#fff}
+.sound-playing{animation:soundPulse .6s ease infinite alternate}
+@keyframes soundPulse{from{box-shadow:0 0 0 0 rgba(155,93,229,.5)}to{box-shadow:0 0 0 6px rgba(155,93,229,.1)}}
+.sound-name{font-size:12px;font-weight:600}
+.sound-stat{font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-top:2px}
+.sound-trend-val{font-size:11px;font-weight:700;color:var(--green);margin-left:auto;font-family:var(--ff-m)}
+.aes-tag{display:inline-flex;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;transition:all .2s;margin:0 5px 8px 0}
+.aes-tag:hover{transform:translateY(-2px)}
+
+/* ─── INSIGHTS ─── */
+.insight-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px}
+.insight-card.feat{background:linear-gradient(135deg,rgba(79,110,255,.08),rgba(0,229,255,.04));border-color:rgba(79,110,255,.25)}
+.insight-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.ins-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ins-title{font-family:var(--ff-d);font-size:14px;font-weight:700}
+.ins-meta{font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-top:2px}
+.ins-text{font-size:13px;color:var(--text-2);line-height:1.75;font-weight:300}
+.ins-text strong{color:var(--text-1);font-weight:600;font-style:normal}
+.ai-tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--ff-m);font-size:10px;color:var(--cyan);background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.18);padding:3px 8px;border-radius:99px;margin-top:10px}
+
+/* ─── TREND DETAIL MODAL ─── */
+.tdetail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.tds-item{background:rgba(255,255,255,.03);border-radius:var(--r-sm);padding:12px;text-align:center}
+.tds-val{font-family:var(--ff-d);font-size:22px;font-weight:800;margin-bottom:3px}
+.tds-lbl{font-size:10px;color:var(--text-3);font-family:var(--ff-m);letter-spacing:.5px}
+.tdetail-chart{height:160px;margin:16px 0}
+.tdetail-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+
+/* ─── PRICING ─── */
+.price-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px;position:relative;overflow:hidden;transition:all .3s}
+.price-card:hover{transform:translateY(-3px)}
+.price-card.feat{border-color:rgba(79,110,255,.45);background:linear-gradient(180deg,rgba(79,110,255,.07) 0%,var(--bg-card) 100%);box-shadow:var(--glow-b)}
+.price-card.feat::before{content:'MOST POPULAR';position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;font-size:9px;font-weight:800;font-family:var(--ff-m);letter-spacing:2px;padding:5px 16px;border-radius:0 0 10px 10px}
+.price-tier{font-family:var(--ff-m);font-size:11px;letter-spacing:2px;color:var(--text-3);margin-bottom:14px}
+.price-val{font-family:var(--ff-d);font-size:46px;font-weight:800;letter-spacing:-2px;line-height:1}
+.price-val sup{font-size:22px;vertical-align:top;margin-top:10px;display:inline-block}
+.price-period{font-size:13px;color:var(--text-3);margin-bottom:20px;margin-top:4px}
+.price-desc{font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:22px}
+.price-feat{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.price-feat li{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--text-2)}
+.price-feat .ck{color:var(--green);font-size:12px;margin-top:1px;flex-shrink:0}
+.price-feat .cx{color:var(--text-3);font-size:12px;margin-top:1px;flex-shrink:0}
+
+/* ─── TESTIMONIALS ─── */
+.test-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:22px;transition:all .3s}
+.test-card:hover{border-color:var(--border-b);transform:translateY(-2px)}
+.test-stars{display:flex;gap:2px;margin-bottom:12px;font-size:13px;color:var(--amber)}
+.test-text{font-size:13px;color:var(--text-2);line-height:1.75;font-style:italic;font-weight:300;margin-bottom:18px}
+.test-text strong{color:var(--text-1);font-style:normal;font-weight:600}
+.test-author{display:flex;align-items:center;gap:11px}
+.test-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;font-family:var(--ff-d);flex-shrink:0}
+.test-name{font-size:13px;font-weight:600}
+.test-role{font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-top:2px}
+.test-fol{font-size:10px;color:var(--cyan);font-family:var(--ff-m);margin-top:1px}
+
+/* ─── FOOTER ─── */
+footer{background:var(--bg-surface);border-top:1px solid var(--border);padding:56px 40px 28px}
+.ft-inner{max-width:1280px;margin:0 auto}
+.ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:44px;margin-bottom:44px}
+.ft-logo{font-family:var(--ff-d);font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+.ft-tag{font-size:13px;color:var(--text-3);line-height:1.7;max-width:260px}
+.ft-col-t{font-size:10px;font-weight:700;font-family:var(--ff-m);letter-spacing:1.5px;color:var(--text-3);text-transform:uppercase;margin-bottom:14px}
+.ft-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.ft-links a{font-size:13px;color:var(--text-2);text-decoration:none;cursor:pointer;transition:color .2s}
+.ft-links a:hover{color:var(--text-1)}
+.ft-bottom{border-top:1px solid var(--border);padding-top:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+.ft-copy{font-size:11px;color:var(--text-3)}
+.ft-social{display:flex;gap:8px}
+.social-btn{width:32px;height:32px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .2s;text-decoration:none;color:var(--text-2)}
+.social-btn:hover{border-color:var(--border-b);background:rgba(79,110,255,.1);transform:translateY(-2px);color:var(--text-1)}
+
+/* ─── SCROLL ANIMATIONS ─── */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity .65s ease,transform .65s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.sd1{transition-delay:.08s}.sd2{transition-delay:.16s}.sd3{transition-delay:.24s}.sd4{transition-delay:.32s}
+
+/* ─── TOGGLE ─── */
+.toggle-track{width:46px;height:24px;background:rgba(79,110,255,.15);border:1px solid rgba(79,110,255,.25);border-radius:99px;position:relative;cursor:pointer;transition:all .3s}
+.toggle-track.on{background:rgba(79,110,255,.35)}
+.toggle-thumb{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.toggle-track.on .toggle-thumb{transform:translateX(22px)}
+.save-badge{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.22);font-size:10px;font-weight:700;font-family:var(--ff-m);padding:2px 8px;border-radius:99px}
+
+/* ─── TAB SWITCHER (inline) ─── */
+.tab-nav{display:flex;gap:3px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md);padding:3px;width:fit-content;flex-wrap:wrap;margin-bottom:24px}
+.tab-btn{padding:7px 16px;border-radius:9px;font-size:12px;font-weight:500;color:var(--text-2);background:transparent;border:none;cursor:pointer;transition:all .2s;font-family:var(--ff-b)}
+.tab-btn.active{background:linear-gradient(135deg,rgba(79,110,255,.2),rgba(0,229,255,.1));color:var(--text-1);border:1px solid rgba(79,110,255,.3)}
+.tab-btn:hover:not(.active){color:var(--text-1);background:rgba(255,255,255,.04)}
+
+/* ─── PROCESSING DOTS ─── */
+.proc-dots span{display:inline-block;width:4px;height:4px;background:var(--cyan);border-radius:50%;margin-right:3px;animation:dotB 1.2s ease infinite}
+.proc-dots span:nth-child(2){animation-delay:.2s}.proc-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dotB{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+.ai-proc{display:flex;align-items:center;gap:8px;font-family:var(--ff-m);font-size:11px;color:var(--text-3)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:1024px){.g-main,.ft-top{grid-template-columns:1fr 1fr}.g3,.g4{grid-template-columns:1fr 1fr}.nav-links{display:none}nav{padding:0 20px}.sec,.sec-full{padding:60px 20px}}
+@media(max-width:640px){.g2,.g3,.g4,.g-main,.ft-top{grid-template-columns:1fr}.sec,.sec-full{padding:48px 16px}#hero{padding:100px 20px 60px}.hero-stats{gap:20px}footer{padding:40px 16px 24px}.trend-grid{grid-template-columns:1fr}}
+
+/* ─── GLOWS ─── */
+.glow-cy{color:var(--cyan);text-shadow:0 0 18px rgba(0,229,255,.5)}
+.glow-bl{color:var(--blue-b);text-shadow:0 0 18px rgba(79,110,255,.5)}
+.glow-pk{color:var(--pink);text-shadow:0 0 18px rgba(255,45,155,.5)}
+
+/* ─── QUOTA / RATE LIMIT DISPLAY ─── */
+.quota-bar{height:5px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin:5px 0}
+.quota-fill{height:100%;border-radius:99px;transition:width .5s ease}
+
+/* ─── ALERT RULES ─── */
+.rule-item{display:flex;align-items:center;gap:10px;padding:11px 14px;background:rgba(255,255,255,.03);border-radius:var(--r-md);border:1px solid var(--border);margin-bottom:8px;transition:all .2s}
+.rule-item:hover{border-color:var(--border-b)}
+.rule-item.active-rule{border-color:rgba(0,255,136,.25);background:rgba(0,255,136,.04)}
+.rule-label{flex:1;font-size:13px;color:var(--text-2)}
+.rule-cond{font-family:var(--ff-m);font-size:11px;color:var(--text-3);margin-right:8px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     LOADER
+══════════════════════════════════ -->
+<div id="loader">
+  <div class="ld-logo">⚡ TrendPulse AI</div>
+  <div class="ld-bar-w"><div class="ld-bar" id="ld-bar"></div></div>
+  <div class="ld-steps" id="ld-step">Initializing neural network...</div>
+</div>
+
+<!-- ══════════════════════════════════
+     TOAST CONTAINER
+══════════════════════════════════ -->
+<div id="toast-container"></div>
+
+<!-- ══════════════════════════════════
+     TREND DETAIL MODAL
+══════════════════════════════════ -->
+<div class="modal-overlay" id="trend-modal">
+  <div class="modal" style="max-width:620px">
+    <button class="modal-close" onclick="closeModal('trend-modal')">✕</button>
+    <div id="trend-modal-content"></div>
+  </div>
+</div>
+
+<!-- API CONFIG MODAL -->
+<div class="modal-overlay" id="api-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('api-modal')">✕</button>
+    <div id="api-modal-content"></div>
+  </div>
+</div>
+
+<!-- ALERT RULE MODAL -->
+<div class="modal-overlay" id="alert-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('alert-modal')">✕</button>
+    <div class="modal-title">Create Alert Rule</div>
+    <div class="modal-sub">Get notified when a trend meets your criteria</div>
+    <div class="form-group">
+      <label class="form-label">ALERT NAME</label>
+      <input class="form-input" id="alert-name" placeholder="e.g. Breakout Score > 85" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">METRIC</label>
+        <select class="form-select" id="alert-metric">
+          <option>Breakout Score</option>
+          <option>Velocity Growth</option>
+          <option>Engagement Rate</option>
+          <option>Post Volume Spike</option>
+          <option>Cross-Platform Spread</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">CONDITION</label>
+        <select class="form-select" id="alert-cond">
+          <option>Greater than</option>
+          <option>Less than</option>
+          <option>Spikes by more than</option>
+          <option>Drops by more than</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">THRESHOLD VALUE</label>
+      <input class="form-input" id="alert-thresh" placeholder="e.g. 85" type="number" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">PLATFORMS</label>
+      <select class="form-select" id="alert-plat">
+        <option>All Platforms</option>
+        <option>TikTok only</option>
+        <option>Instagram only</option>
+        <option>YouTube only</option>
+        <option>X / Twitter only</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">NOTIFY VIA</label>
+      <select class="form-select" id="alert-via">
+        <option>In-App + Toast</option>
+        <option>Email</option>
+        <option>Webhook</option>
+        <option>All channels</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveAlertRule()">Save Rule</button>
+      <button class="btn btn-ghost" onclick="closeModal('alert-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="export-modal">
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" onclick="closeModal('export-modal')">✕</button>
+    <div class="modal-title">Export Trend Data</div>
+    <div class="modal-sub">Choose format and scope for your export</div>
+    <div class="form-group">
+      <label class="form-label">FORMAT</label>
+      <select class="form-select" id="exp-format">
+        <option>CSV — Spreadsheet compatible</option>
+        <option>JSON — Developer / API format</option>
+        <option>PDF Report — Shareable summary</option>
+        <option>Markdown — Documentation</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">DATA SCOPE</label>
+      <select class="form-select" id="exp-scope">
+        <option>Current dashboard view</option>
+        <option>All trends (last 7 days)</option>
+        <option>All trends (last 30 days)</option>
+        <option>Breakout alerts only</option>
+        <option>AI prediction reports</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">INCLUDE FIELDS</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="exp-fields">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer"><input type="checkbox" checked> Hashtag</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer"><input type="checkbox" checked> Velocity</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer"><input type="checkbox" checked> Engagement</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer"><input type="checkbox" checked> Breakout Score</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer"><input type="checkbox" checked> Platform</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer"><input type="checkbox"> Raw timeseries</label>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="doExport()">⬇ Export Now</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     NAVIGATION
+══════════════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-logo" onclick="scrollSec('hero')">
+    <div class="nav-logo-icon">⚡</div>
+    TrendPulse AI
+  </div>
+  <div class="nav-links">
+    <a onclick="scrollSec('dashboard')">Dashboard</a>
+    <a onclick="scrollSec('scanner-sec')">Scanner</a>
+    <a onclick="scrollSec('ai-sec')">AI Engine</a>
+    <a onclick="scrollSec('discover-sec')">Discover</a>
+    <a onclick="scrollSec('pricing-sec')">Pricing</a>
+  </div>
+  <div class="nav-cta">
+    <button class="btn btn-ghost btn-sm" onclick="openSignIn()">Sign in</button>
+    <button class="btn btn-primary btn-sm" onclick="openSignUp()">Get Early Access</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════
+     HERO
+══════════════════════════════════ -->
+<section id="hero" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:120px 40px 80px;text-align:center;max-width:100%;margin:0">
+  <div class="hero-bg">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <div class="hero-orb hero-orb-4"></div>
+    <div class="hero-grid"></div>
+    <div class="scan-line"></div>
+  </div>
+  <div class="hero-content">
+    <div class="live-counter">
+      <span class="live-dot"></span>
+      LIVE: <span id="live-count">47,293</span> trends analyzed today
+    </div>
+    <div class="hero-badge"><span class="badge-dot"></span>AI-POWERED TREND INTELLIGENCE — v2.4</div>
+    <h1 class="hero-title">Predict Viral Trends<br><span class="grad-text">Before The Internet</span><br>Notices</h1>
+    <p class="hero-sub">TrendPulse AI scans TikTok, Instagram, YouTube &amp; X in real-time — surfacing breakout trends <strong>48–72 hours</strong> before they explode. Stop chasing. Start leading.</p>
+    <div class="hero-buttons">
+      <button class="btn btn-primary btn-lg" onclick="openSignUp()">⚡ Start Free Trial</button>
+      <button class="btn btn-ghost btn-lg" onclick="scrollSec('dashboard')">View Live Dashboard →</button>
+    </div>
+    <div class="hero-stats">
+      <div><div class="hero-stat-val" id="hs-1">0</div><div class="hero-stat-lbl">Posts Analyzed</div></div>
+      <div><div class="hero-stat-val" id="hs-2">0</div><div class="hero-stat-lbl">Prediction Accuracy</div></div>
+      <div><div class="hero-stat-val" id="hs-3">0</div><div class="hero-stat-lbl">Active Creators</div></div>
+      <div><div class="hero-stat-val" id="hs-4">0</div><div class="hero-stat-lbl">Avg Trend Lead Time</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════
+     LIVE DASHBOARD
+══════════════════════════════════ -->
+<section class="sec" id="dashboard">
+  <div class="fade-up">
+    <div class="eyebrow">⚡ LIVE DASHBOARD</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:8px">
+      <div>
+        <div class="sec-title">Trends Heating Up <span class="glow-cy">Right Now</span></div>
+        <p class="sec-sub">Auto-refreshing across all major platforms — scored by breakout probability.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:8px">
+        <button class="btn btn-ghost btn-sm" onclick="refreshDashboard(this)" id="refresh-btn">↻ Refresh</button>
+        <button class="btn btn-ghost btn-sm" onclick="openExport()">⬇ Export</button>
+        <button class="btn btn-primary btn-sm" onclick="openAlertModal()">+ Alert Rule</button>
+      </div>
+    </div>
+  </div>
+  <div class="tab-nav fade-up sd1" id="trend-tabs">
+    <button class="tab-btn active" onclick="filterTrends('all',this)">All Trends</button>
+    <button class="tab-btn" onclick="filterTrends('tiktok',this)">TikTok</button>
+    <button class="tab-btn" onclick="filterTrends('instagram',this)">Instagram</button>
+    <button class="tab-btn" onclick="filterTrends('youtube',this)">YouTube</button>
+    <button class="tab-btn" onclick="filterTrends('x',this)">X / Twitter</button>
+    <button class="tab-btn" onclick="filterTrends('breakout',this)">🔥 Breakout</button>
+  </div>
+  <div class="trend-grid fade-up sd2" id="trend-cards"></div>
+  <div class="ai-proc fade-up sd3" style="margin-top:16px">
+    <div class="proc-dots"><span></span><span></span><span></span></div>
+    <span>Neural network scanning 1,247 signals — last updated <span id="last-upd">just now</span></span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════
+     SCANNER CONFIGURATION
+══════════════════════════════════ -->
+<section class="sec-full" id="scanner-sec">
+  <div class="sec-inner">
+    <div class="fade-up">
+      <div class="eyebrow">🔭 TREND SCANNER</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+        <div>
+          <div class="sec-title">Real-Time <span class="glow-bl">Data Sources</span></div>
+          <p class="sec-sub">Configure your API keys, scraping layers, and ingestion workers.</p>
+        </div>
+        <div style="display:flex;gap:8px;padding-top:8px">
+          <button class="btn btn-ghost btn-sm" id="scan-status-btn" onclick="toggleScanner(this)">▶ Start Scanner</button>
+          <button class="btn btn-primary btn-sm" onclick="runScanNow(this)">⚡ Scan Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page tabs: API Keys | Scan Log | Queue | Quota -->
+    <div class="page-tabs fade-up sd1">
+      <div class="page-tab active" onclick="switchPage('pg-apis',this)">API Sources</div>
+      <div class="page-tab" onclick="switchPage('pg-log',this)">Scan Log</div>
+      <div class="page-tab" onclick="switchPage('pg-queue',this)">Ingestion Queue</div>
+      <div class="page-tab" onclick="switchPage('pg-quota',this)">Quota & Rate Limits</div>
+      <div class="page-tab" onclick="switchPage('pg-rules',this)">Alert Rules</div>
+    </div>
+
+    <!-- API SOURCES -->
+    <div class="page-panel active" id="pg-apis">
+      <div class="g2 gap-lg" style="margin-top:24px">
+        <!-- YouTube -->
+        <div class="card fade-up sd1">
+          <div class="card-title">YouTube Data API v3</div>
+          <div class="card-sub" style="margin-bottom:16px">search.list · videos.list · commentThreads · channels</div>
+          <div class="api-row">
+            <div class="api-icon" style="background:linear-gradient(135deg,#FF0000,#cc0000)">▶</div>
+            <div class="api-info">
+              <div class="api-name">YouTube Data API v3</div>
+              <div class="api-detail" id="yt-key-display">No key configured</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="yt-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('youtube')">Configure</button>
+            </div>
+          </div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(79,110,255,.15)">🎭</div>
+            <div class="api-info">
+              <div class="api-name">Playwright Scraper</div>
+              <div class="api-detail">Shorts feed · Recommended · Related sidebar</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="yt-scraper-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('yt-scraper')">Configure</button>
+            </div>
+          </div>
+          <div class="quota-bar" style="margin-top:12px"><div class="quota-fill" id="yt-quota" style="width:34%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-top:4px"><span>DAILY QUOTA USED</span><span id="yt-quota-text">34,200 / 100,000 units</span></div>
+        </div>
+
+        <!-- TikTok -->
+        <div class="card fade-up sd2">
+          <div class="card-title">TikTok — Hybrid Stack</div>
+          <div class="card-sub" style="margin-bottom:16px">TikHub API + Playwright scraping layer</div>
+          <div class="api-row">
+            <div class="api-icon" style="background:linear-gradient(135deg,#010101,#69C9D0)">♪</div>
+            <div class="api-info">
+              <div class="api-name">TikHub API</div>
+              <div class="api-detail" id="tiktok-key-display">No key configured · tikhub.io</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="tiktok-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('tiktok')">Configure</button>
+            </div>
+          </div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(155,93,229,.15)">🎭</div>
+            <div class="api-info">
+              <div class="api-name">Playwright + Proxy Layer</div>
+              <div class="api-detail">Hashtag pages · Sound pages · FYP samples</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="tt-scraper-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('tt-scraper')">Configure</button>
+            </div>
+          </div>
+          <div class="quota-bar" style="margin-top:12px"><div class="quota-fill" id="tt-quota" style="width:18%;background:linear-gradient(90deg,var(--cyan),var(--blue))"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-top:4px"><span>API CREDITS USED</span><span id="tt-quota-text">1,800 / 10,000 req/day</span></div>
+        </div>
+
+        <!-- Instagram -->
+        <div class="card fade-up sd1">
+          <div class="card-title">Instagram — Meta + Scraping</div>
+          <div class="card-sub" style="margin-bottom:16px">Instagram Graph API + HikerAPI / SocialFetch</div>
+          <div class="api-row">
+            <div class="api-icon" style="background:linear-gradient(135deg,#405DE6,#C13584,#FD1D1D)">📷</div>
+            <div class="api-info">
+              <div class="api-name">Instagram Graph API</div>
+              <div class="api-detail" id="ig-key-display">No access token configured</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="ig-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('instagram')">Configure</button>
+            </div>
+          </div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(255,45,155,.15)">🔍</div>
+            <div class="api-info">
+              <div class="api-name">HikerAPI / SocialFetch</div>
+              <div class="api-detail" id="hiker-key-display">No key configured · hikerapi.com</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="hiker-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('hiker')">Configure</button>
+            </div>
+          </div>
+          <div class="quota-bar" style="margin-top:12px"><div class="quota-fill" id="ig-quota" style="width:9%;background:linear-gradient(90deg,var(--pink),var(--purple))"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-top:4px"><span>REQUESTS USED</span><span id="ig-quota-text">450 / 5,000 req/day</span></div>
+        </div>
+
+        <!-- X / Twitter -->
+        <div class="card fade-up sd2">
+          <div class="card-title">X (Twitter) API v2</div>
+          <div class="card-sub" style="margin-bottom:16px">Filtered Stream · Recent Search · Tweet Lookup</div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(255,255,255,.08)">𝕏</div>
+            <div class="api-info">
+              <div class="api-name">X API Bearer Token</div>
+              <div class="api-detail" id="x-key-display">No bearer token configured</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="x-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('x')">Configure</button>
+            </div>
+          </div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(0,229,255,.12)">📡</div>
+            <div class="api-info">
+              <div class="api-name">Filtered Stream</div>
+              <div class="api-detail">Mentions/min · Keyword bursts · RT cascades</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="x-stream-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('x-stream')">Configure</button>
+            </div>
+          </div>
+          <div class="quota-bar" style="margin-top:12px"><div class="quota-fill" id="x-quota" style="width:62%;background:linear-gradient(90deg,var(--amber),var(--pink))"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-top:4px"><span>MONTHLY TWEETS READ</span><span id="x-quota-text">310,000 / 500,000 tweets</span></div>
+        </div>
+
+        <!-- AI Layer -->
+        <div class="card fade-up sd1">
+          <div class="card-title">AI Processing Layer</div>
+          <div class="card-sub" style="margin-bottom:16px">OpenAI Embeddings · Whisper STT · Vision OCR</div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(0,255,136,.12)">🧠</div>
+            <div class="api-info">
+              <div class="api-name">OpenAI Embeddings API</div>
+              <div class="api-detail" id="oai-key-display">No API key configured · platform.openai.com</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="oai-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('openai')">Configure</button>
+            </div>
+          </div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(79,110,255,.15)">🎙</div>
+            <div class="api-info">
+              <div class="api-name">Whisper STT</div>
+              <div class="api-detail">Audio trend detection · Phrase clustering</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="whisper-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('whisper')">Configure</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Infrastructure -->
+        <div class="card fade-up sd2">
+          <div class="card-title">Infrastructure Layer</div>
+          <div class="card-sub" style="margin-bottom:16px">Redis Queue · ClickHouse · OpenSearch</div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(255,61,90,.12)">⚡</div>
+            <div class="api-info">
+              <div class="api-name">Redis Streams</div>
+              <div class="api-detail" id="redis-display">localhost:6379 — not configured</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="redis-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('redis')">Configure</button>
+            </div>
+          </div>
+          <div class="api-row">
+            <div class="api-icon" style="background:rgba(255,184,0,.12)">📊</div>
+            <div class="api-info">
+              <div class="api-name">ClickHouse</div>
+              <div class="api-detail" id="ch-display">localhost:8123 — not configured</div>
+            </div>
+            <div class="api-actions">
+              <span class="status-badge idle" id="ch-status">IDLE</span>
+              <button class="btn btn-ghost btn-sm" onclick="openApiConfig('clickhouse')">Configure</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCAN LOG -->
+    <div class="page-panel" id="pg-log">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:24px 0 12px">
+        <div style="font-family:var(--ff-d);font-size:15px;font-weight:700">Real-Time Scanner Log</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear</button>
+          <button class="btn btn-green btn-sm" onclick="runScanNow(this)">▶ Run Scan</button>
+        </div>
+      </div>
+      <div class="log-wrap" id="scan-log"></div>
+      <div class="ai-proc" style="margin-top:10px" id="log-status">
+        <div class="proc-dots"><span></span><span></span><span></span></div>
+        <span>Scanner idle — configure API keys to begin</span>
+      </div>
+    </div>
+
+    <!-- QUEUE -->
+    <div class="page-panel" id="pg-queue">
+      <div style="margin-top:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="font-family:var(--ff-d);font-size:15px;font-weight:700">Ingestion Worker Queue</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="flushQueue()">Flush Queue</button>
+            <button class="btn btn-primary btn-sm" onclick="enqueueAll()">Enqueue All Sources</button>
+          </div>
+        </div>
+        <div class="g4" style="margin-bottom:20px">
+          <div class="card" style="text-align:center">
+            <div style="font-family:var(--ff-d);font-size:28px;font-weight:800;color:var(--cyan)" id="q-pending">0</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:var(--ff-m);margin-top:4px">PENDING</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-family:var(--ff-d);font-size:28px;font-weight:800;color:var(--green)" id="q-processed">0</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:var(--ff-m);margin-top:4px">PROCESSED</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-family:var(--ff-d);font-size:28px;font-weight:800;color:var(--amber)" id="q-failed">0</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:var(--ff-m);margin-top:4px">FAILED</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-family:var(--ff-d);font-size:28px;font-weight:800;color:var(--blue-b)" id="q-rate">0</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:var(--ff-m);margin-top:4px">REQ/MIN</div>
+          </div>
+        </div>
+        <div class="log-wrap" id="queue-log" style="height:180px"></div>
+      </div>
+    </div>
+
+    <!-- QUOTA -->
+    <div class="page-panel" id="pg-quota">
+      <div style="margin-top:24px" class="g2">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">API Rate Limit Status</div>
+          <div id="quota-display"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">Trend Score Formula</div>
+          <div style="background:rgba(0,0,0,.35);border-radius:var(--r-md);padding:16px;font-family:var(--ff-m);font-size:11px;color:var(--cyan);line-height:2">
+            <div style="color:var(--text-3);margin-bottom:8px">// Core scoring algorithm</div>
+            trend_score =<br>
+            &nbsp;&nbsp;velocity<br>
+            &nbsp;&nbsp;× acceleration<br>
+            &nbsp;&nbsp;× creator_diversity<br>
+            &nbsp;&nbsp;× cross_platform_factor<br><br>
+            <div style="color:var(--text-3)">// Alert trigger condition</div>
+            alert_when:<br>
+            &nbsp;&nbsp;acceleration_spike AND<br>
+            &nbsp;&nbsp;NOT saturation_signal<br><br>
+            <div style="color:var(--green)">// Weights (tunable)</div>
+            velocity_w = 0.35<br>
+            accel_w = 0.30<br>
+            creator_div_w = 0.20<br>
+            cross_plat_w = 0.15
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center" onclick="openFormulaEditor()">Edit Formula Weights</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERT RULES -->
+    <div class="page-panel" id="pg-rules">
+      <div style="margin-top:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="font-family:var(--ff-d);font-size:15px;font-weight:700">Active Alert Rules</div>
+          <button class="btn btn-primary btn-sm" onclick="openAlertModal()">+ New Rule</button>
+        </div>
+        <div id="rules-list"></div>
+        <div style="color:var(--text-3);font-size:13px;text-align:center;padding:20px 0;display:none" id="no-rules">No alert rules yet — create one to get started.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════
+     AI ENGINE + CHARTS
+══════════════════════════════════ -->
+<section class="sec" id="ai-sec">
+  <div class="fade-up">
+    <div class="eyebrow">🧠 AI PREDICTION ENGINE</div>
+    <div class="sec-title">Neural Trend <span class="glow-bl">Forecasting</span></div>
+    <p class="sec-sub">7-layer prediction model analyzing momentum, saturation signals, and creator velocity.</p>
+  </div>
+  <br>
+  <div class="g-main fade-up sd1">
+    <!-- Gauge + predictions -->
+    <div class="card" style="position:relative;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div class="card-title">AI Confidence Score</div>
+        <span class="status-badge scanning">● LIVE MODEL</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <svg width="200" height="118" viewBox="0 0 200 118">
+          <path d="M18 110 A88 88 0 0 1 182 110" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="11" stroke-linecap="round"/>
+          <path id="gauge-path" d="M18 110 A88 88 0 0 1 182 110" fill="none" stroke="url(#gGrad)" stroke-width="11" stroke-linecap="round" stroke-dasharray="277" stroke-dashoffset="277"/>
+          <defs><linearGradient id="gGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4f6eff"/><stop offset="100%" stop-color="#00e5ff"/></linearGradient></defs>
+        </svg>
+        <div style="font-family:var(--ff-d);font-size:38px;font-weight:800;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-top:-10px" id="gauge-num">0%</div>
+        <div style="font-size:10px;color:var(--text-3);font-family:var(--ff-m);letter-spacing:1px">VIRAL PROBABILITY</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,229,255,.05);border-radius:var(--r-sm);border-left:3px solid var(--cyan)">
+          <span style="font-size:12px;color:var(--text-2)">🎯 Trend: #AestheticCore</span>
+          <span style="font-family:var(--ff-m);font-size:12px;font-weight:700;color:var(--cyan)">94.2%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,45,155,.04);border-radius:var(--r-sm);border-left:3px solid var(--pink)">
+          <span style="font-size:12px;color:var(--text-2)">🔥 Breakout Speed</span>
+          <span style="font-family:var(--ff-m);font-size:12px;font-weight:700;color:var(--pink)">+340%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:var(--r-sm);border-left:3px solid var(--blue)">
+          <span style="font-size:12px;color:var(--text-2)">📅 Predicted Peak</span>
+          <span style="font-family:var(--ff-m);font-size:12px;font-weight:700">Jun 03</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,255,136,.04);border-radius:var(--r-sm);border-left:3px solid var(--green)">
+          <span style="font-size:12px;color:var(--text-2)">⚠️ Saturation Risk</span>
+          <span style="font-family:var(--ff-m);font-size:12px;font-weight:700;color:var(--green)">LOW</span>
+        </div>
+      </div>
+      <div class="ai-proc" style="margin-top:14px"><div class="proc-dots"><span></span><span></span><span></span></div><span>Model inference running</span></div>
+    </div>
+    <!-- Probability meters -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:18px">Viral Probability Meters</div>
+      <div id="prob-meters"></div>
+    </div>
+  </div>
+  <br>
+  <!-- Charts row -->
+  <div class="g-main fade-up sd2">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div><div class="chart-title">Trend Velocity Index — 30 Days</div><div class="chart-meta">Cross-platform aggregated signal</div></div>
+        <span class="chart-badge up" id="vel-change">↑ +127.4%</span>
+      </div>
+      <div class="c-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-head"><div class="chart-title">Category Radar</div><div class="chart-meta">By engagement volume</div></div>
+      <div class="c-wrap"><canvas id="radarChart"></canvas></div>
+    </div>
+  </div>
+  <div class="g3 fade-up sd3" style="margin-top:20px">
+    <div class="chart-card">
+      <div class="chart-head"><div class="chart-title">Top Hashtags</div><span class="chart-badge up">↑ Hot</span></div>
+      <div class="c-wrap-sm"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-head"><div class="chart-title">Platform Share</div><div class="chart-meta">By trend origin</div></div>
+      <div class="c-wrap-sm"><canvas id="doughnutChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-head"><div class="chart-title">Best Posting Times</div><span class="chart-badge up">↑ Optimal</span></div>
+      <div class="c-wrap-sm"><canvas id="timeChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════
+     PLATFORM MONITOR
+══════════════════════════════════ -->
+<section class="sec-full" id="platforms-sec">
+  <div class="sec-inner">
+    <div class="fade-up">
+      <div class="eyebrow">🔭 PLATFORM MONITOR</div>
+      <div class="sec-title">Cross-Platform <span class="glow-cy">Signal Intelligence</span></div>
+      <p class="sec-sub">Real-time monitoring unified across every major short-form video platform.</p>
+    </div>
+    <br>
+    <div class="g3 fade-up sd1">
+      <!-- TikTok -->
+      <div class="plat-card">
+        <div class="plat-head">
+          <div class="plat-icon" style="background:linear-gradient(135deg,#010101,#69C9D0);color:#fff">♪</div>
+          <div>
+            <div class="plat-name">TikTok</div>
+            <div class="plat-status"><span class="live-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></span><span style="color:var(--green)">Live monitoring</span></div>
+          </div>
+        </div>
+        <div class="plat-stats">
+          <div class="ps-item"><div class="ps-num" id="tt-posts">2.4M</div><div class="ps-lbl">DAILY POSTS</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--green)" id="tt-eng">+24%</div><div class="ps-lbl">AVG ENGAGEMENT</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--cyan)" id="tt-sounds">8,429</div><div class="ps-lbl">RISING SOUNDS</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--pink)" id="tt-break">347</div><div class="ps-lbl">BREAKOUTS</div></div>
+        </div>
+        <div class="spike-row" id="tt-spikes"></div>
+      </div>
+      <!-- Instagram -->
+      <div class="plat-card">
+        <div class="plat-head">
+          <div class="plat-icon" style="background:linear-gradient(135deg,#405DE6,#C13584,#FD1D1D);color:#fff">📷</div>
+          <div>
+            <div class="plat-name">Instagram Reels</div>
+            <div class="plat-status"><span class="live-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></span><span style="color:var(--green)">Live monitoring</span></div>
+          </div>
+        </div>
+        <div class="plat-stats">
+          <div class="ps-item"><div class="ps-num" id="ig-posts">1.8M</div><div class="ps-lbl">DAILY POSTS</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--green)" id="ig-eng">+18%</div><div class="ps-lbl">AVG ENGAGEMENT</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--cyan)" id="ig-sounds">5,204</div><div class="ps-lbl">RISING SOUNDS</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--pink)" id="ig-break">219</div><div class="ps-lbl">BREAKOUTS</div></div>
+        </div>
+        <div class="spike-row" id="ig-spikes"></div>
+      </div>
+      <!-- YouTube -->
+      <div class="plat-card">
+        <div class="plat-head">
+          <div class="plat-icon" style="background:linear-gradient(135deg,#FF0000,#cc0000);color:#fff">▶</div>
+          <div>
+            <div class="plat-name">YouTube Shorts</div>
+            <div class="plat-status"><span class="live-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></span><span style="color:var(--green)">Live monitoring</span></div>
+          </div>
+        </div>
+        <div class="plat-stats">
+          <div class="ps-item"><div class="ps-num" id="yt-posts">920K</div><div class="ps-lbl">DAILY POSTS</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--green)" id="yt-eng">+11%</div><div class="ps-lbl">AVG ENGAGEMENT</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--cyan)" id="yt-sounds">3,847</div><div class="ps-lbl">RISING SOUNDS</div></div>
+          <div class="ps-item"><div class="ps-num" style="color:var(--pink)" id="yt-break">124</div><div class="ps-lbl">BREAKOUTS</div></div>
+        </div>
+        <div class="spike-row" id="yt-spikes"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════
+     DISCOVER
+══════════════════════════════════ -->
+<section class="sec" id="discover-sec">
+  <div class="fade-up">
+    <div class="eyebrow">🔍 DISCOVER</div>
+    <div class="sec-title">Niche Opportunities &amp; <span class="glow-pk">Rising Sounds</span></div>
+    <p class="sec-sub">Find your breakout category before the competition floods in.</p>
+  </div>
+  <br>
+  <div class="g2 fade-up sd1">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">🎯 Niche Opportunity Score</div>
+      <div id="niche-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">🎵 Rising Sounds</div>
+      <div id="sounds-list"></div>
+      <div class="card-title" style="margin:16px 0 12px">🔥 Breakout Aesthetics</div>
+      <div id="aes-list"></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════
+     AI INSIGHTS
+══════════════════════════════════ -->
+<section class="sec" id="insights-sec">
+  <div class="fade-up">
+    <div class="eyebrow">🧠 AI INSIGHTS</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="sec-title">Intelligent <span class="glow-bl">Trend Analysis</span></div>
+        <p class="sec-sub">Natural language insights from our fine-tuned trend intelligence model.</p>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="generateInsights(this)">🧠 Generate New Insights</button>
+    </div>
+  </div>
+  <br>
+  <div class="g2 fade-up sd1" id="insights-grid"></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════
+     PRICING
+══════════════════════════════════ -->
+<section class="sec-full" id="pricing-sec">
+  <div class="sec-inner">
+    <div class="fade-up" style="text-align:center">
+      <div class="eyebrow">💳 PRICING</div>
+      <div class="sec-title">Simple, <span class="glow-cy">Transparent</span> Pricing</div>
+      <p class="sec-sub" style="margin:0 auto">Start free. Scale as you grow. No hidden fees.</p>
+    </div>
+    <br>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:40px" class="fade-up sd1">
+      <span style="font-size:14px;color:var(--text-2)">Monthly</span>
+      <div class="toggle-track" id="bill-toggle" onclick="toggleBilling(this)"><div class="toggle-thumb"></div></div>
+      <span style="font-size:14px;color:var(--text-2)">Annual</span>
+      <span class="save-badge">SAVE 40%</span>
+    </div>
+    <div class="g3 fade-up sd2">
+      <div class="price-card">
+        <div class="price-tier">STARTER</div>
+        <div class="price-val" style="color:var(--text-1)"><sup>$</sup><span class="pv" data-m="29" data-a="17">29</span></div>
+        <div class="price-period">per month, billed <span class="bill-period">monthly</span></div>
+        <div class="price-desc">For solo creators discovering their edge and building their first viral moment.</div>
+        <ul class="price-feat">
+          <li><span class="ck">✓</span>50 trend scans / day</li>
+          <li><span class="ck">✓</span>TikTok + Instagram monitoring</li>
+          <li><span class="ck">✓</span>AI breakout alerts (email)</li>
+          <li><span class="ck">✓</span>Basic trend charts</li>
+          <li><span class="ck">✓</span>5 niche categories</li>
+          <li><span class="cx">✗</span><span style="color:var(--text-3)">Custom AI reports</span></li>
+          <li><span class="cx">✗</span><span style="color:var(--text-3)">API access</span></li>
+        </ul>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="openCheckout('Starter','29')">Get Started</button>
+      </div>
+      <div class="price-card feat">
+        <div class="price-tier">PRO</div>
+        <div class="price-val" style="background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent"><sup>$</sup><span class="pv" data-m="79" data-a="47">79</span></div>
+        <div class="price-period">per month, billed <span class="bill-period">monthly</span></div>
+        <div class="price-desc">For serious creators and agencies ready to dominate their niche.</div>
+        <ul class="price-feat">
+          <li><span class="ck">✓</span>Unlimited trend scans</li>
+          <li><span class="ck">✓</span>All 4 platforms</li>
+          <li><span class="ck">✓</span>Real-time push alerts</li>
+          <li><span class="ck">✓</span>Full AI prediction reports</li>
+          <li><span class="ck">✓</span>Unlimited niches + sounds</li>
+          <li><span class="ck">✓</span>Creator velocity tracking</li>
+          <li><span class="cx">✗</span><span style="color:var(--text-3)">API access</span></li>
+        </ul>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="openCheckout('Pro','79')">Start Pro Trial</button>
+      </div>
+      <div class="price-card">
+        <div class="price-tier">ENTERPRISE</div>
+        <div class="price-val" style="color:var(--purple-b)"><sup>$</sup><span class="pv" data-m="299" data-a="179">299</span></div>
+        <div class="price-period">per month, billed <span class="bill-period">monthly</span></div>
+        <div class="price-desc">For agencies, brands, and enterprise teams needing custom data feeds.</div>
+        <ul class="price-feat">
+          <li><span class="ck">✓</span>Everything in Pro</li>
+          <li><span class="ck">✓</span>Full API access</li>
+          <li><span class="ck">✓</span>White-label dashboard</li>
+          <li><span class="ck">✓</span>Custom trend reports</li>
+          <li><span class="ck">✓</span>Dedicated AI analyst</li>
+          <li><span class="ck">✓</span>SLA guarantee</li>
+          <li><span class="ck">✓</span>10 team seats</li>
+        </ul>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;border-color:rgba(155,93,229,.35);color:var(--purple-b)" onclick="openCheckout('Enterprise','299')">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     TESTIMONIALS
+══════════════════════════════════ -->
+<section class="sec" id="testimonials-sec">
+  <div class="fade-up" style="text-align:center">
+    <div class="eyebrow">⭐ TESTIMONIALS</div>
+    <div class="sec-title">Creators Love <span class="glow-pk">TrendPulse AI</span></div>
+    <p class="sec-sub" style="margin:0 auto">Join 12,800+ creators predicting trends before they go viral.</p>
+  </div>
+  <br>
+  <div class="g3 fade-up sd1">
+    <div class="test-card"><div class="test-stars">★★★★★</div><p class="test-text">"TrendPulse told me about <strong>#AestheticCore</strong> 4 days before it blew up. I was first in my niche and got <strong>2.1M views in 72 hours</strong>."</p><div class="test-author"><div class="test-avatar" style="background:linear-gradient(135deg,var(--pink),var(--purple))">J</div><div><div class="test-name">Jade Morelli</div><div class="test-role">LIFESTYLE CREATOR</div><div class="test-fol">1.2M followers · TikTok</div></div></div></div>
+    <div class="test-card"><div class="test-stars">★★★★★</div><p class="test-text">"We use TrendPulse for all our brand clients. The <strong>72-hour lead time is consistently accurate</strong>. Saved hundreds of hours of manual research."</p><div class="test-author"><div class="test-avatar" style="background:linear-gradient(135deg,var(--blue),var(--cyan))">M</div><div><div class="test-name">Marcus Chen</div><div class="test-role">AGENCY DIRECTOR</div><div class="test-fol">Velocity Creative · NYC</div></div></div></div>
+    <div class="test-card"><div class="test-stars">★★★★★</div><p class="test-text">"Hit 4 trends early in a row. My account went from 80K to <strong>480K followers in 3 months</strong>. No other tool comes close."</p><div class="test-author"><div class="test-avatar" style="background:linear-gradient(135deg,var(--cyan),var(--green))">A</div><div><div class="test-name">Aisha Rowe</div><div class="test-role">FASHION CREATOR</div><div class="test-fol">480K followers · Instagram</div></div></div></div>
+    <div class="test-card"><div class="test-stars">★★★★★</div><p class="test-text">"We got <strong>48-hour advance warning</strong> on the GymTok revival. Launched our campaign perfectly — <strong>14M organic impressions</strong>."</p><div class="test-author"><div class="test-avatar" style="background:linear-gradient(135deg,var(--amber),var(--pink))">T</div><div><div class="test-name">Tyler Banks</div><div class="test-role">BRAND MARKETING LEAD</div><div class="test-fol">FitBrand Co · 2M reach</div></div></div></div>
+    <div class="test-card"><div class="test-stars">★★★★☆</div><p class="test-text">"The cross-platform unified dashboard is the best feature I've seen. <strong>TikTok, Instagram, and YouTube in one view</strong> — incredible."</p><div class="test-author"><div class="test-avatar" style="background:linear-gradient(135deg,var(--purple),var(--blue))">S</div><div><div class="test-name">Sofia Navarro</div><div class="test-role">CONTENT STRATEGIST</div><div class="test-fol">Freelance · 6 Brand Clients</div></div></div></div>
+    <div class="test-card"><div class="test-stars">★★★★★</div><p class="test-text">"Skeptical at first — but <strong>the data is real, the predictions hold up</strong>. The Pro plan is worth every penny. The scanner config is incredibly detailed."</p><div class="test-author"><div class="test-avatar" style="background:linear-gradient(135deg,#ff6b35,var(--pink))">K</div><div><div class="test-name">Kai Thompson</div><div class="test-role">TECH CREATOR</div><div class="test-fol">890K followers · YouTube</div></div></div></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     FOOTER
+══════════════════════════════════ -->
+<footer>
+  <div class="ft-inner">
+    <div class="ft-top">
+      <div>
+        <div class="ft-logo">⚡ TrendPulse AI</div>
+        <p class="ft-tag">The world's most advanced viral trend prediction platform. Know what's next — before anyone else does.</p>
+        <br>
+        <div class="ft-social">
+          <a class="social-btn" href="#" onclick="socialClick('X')">𝕏</a>
+          <a class="social-btn" href="#" onclick="socialClick('LinkedIn')">in</a>
+          <a class="social-btn" href="#" onclick="socialClick('YouTube')">▶</a>
+          <a class="social-btn" href="#" onclick="socialClick('TikTok')">♪</a>
+        </div>
+      </div>
+      <div>
+        <div class="ft-col-t">Product</div>
+        <ul class="ft-links">
+          <li><a onclick="scrollSec('dashboard')">Dashboard</a></li>
+          <li><a onclick="scrollSec('scanner-sec')">AI Scanner</a></li>
+          <li><a onclick="openAlertModal()">Trend Alerts</a></li>
+          <li><a onclick="openApiConfig('openai')">API Access</a></li>
+          <li><a onclick="showComingSoon('Integrations')">Integrations</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="ft-col-t">Company</div>
+        <ul class="ft-links">
+          <li><a onclick="showComingSoon('About Us')">About Us</a></li>
+          <li><a onclick="showComingSoon('Blog')">Blog</a></li>
+          <li><a onclick="showComingSoon('Press Kit')">Press Kit</a></li>
+          <li><a onclick="showComingSoon('Careers')">Careers</a></li>
+          <li><a onclick="openContact()">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="ft-col-t">Legal</div>
+        <ul class="ft-links">
+          <li><a onclick="showComingSoon('Privacy Policy')">Privacy Policy</a></li>
+          <li><a onclick="showComingSoon('Terms of Service')">Terms of Service</a></li>
+          <li><a onclick="showComingSoon('Cookie Policy')">Cookie Policy</a></li>
+          <li><a onclick="showComingSoon('GDPR')">GDPR</a></li>
+          <li><a onclick="showComingSoon('Security')">Security</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <div class="ft-copy">© 2026 TrendPulse AI, Inc. All rights reserved. Built with ⚡ in San Francisco.</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="font-size:10px;color:var(--text-3);font-family:var(--ff-m)">SOC 2 TYPE II · ISO 27001 · GDPR</span>
+        <div style="width:6px;height:6px;background:var(--green);border-radius:50%;box-shadow:0 0 7px var(--green)"></div>
+        <span style="font-size:10px;color:var(--green);font-family:var(--ff-m)">ALL SYSTEMS OPERATIONAL</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════
+     JAVASCRIPT — ALL FUNCTIONALITY
+══════════════════════════════════ -->
+<script>
+'use strict';
+
+// ── APP STATE ──────────────────────────────────────────────
+const STATE = {
+  apiKeys: {}, // stored per-source
+  scannerRunning: false,
+  scanInterval: null,
+  logLines: [],
+  queuePending: 0,
+  queueProcessed: 0,
+  queueFailed: 0,
+  alertRules: [],
+  annualBilling: false,
+  sounds: new Map(), // playing sounds
+  charts: {},
+  trendFilter: 'all',
+};
+
+// ── LOADER ──────────────────────────────────────────────────
+(function initLoader() {
+  const steps = [
+    'Initializing neural network...',
+    'Connecting to data ingestion layer...',
+    'Loading trend scoring engine...',
+    'Calibrating breakout detectors...',
+    'Fetching seed trend data...',
+    'Ready.',
+  ];
+  const bar = document.getElementById('ld-bar');
+  const stepEl = document.getElementById('ld-step');
+  let i = 0;
+  const tick = () => {
+    if (i >= steps.length) {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+        initApp();
+      }, 300);
+      return;
+    }
+    stepEl.textContent = steps[i];
+    bar.style.width = ((i + 1) / steps.length * 100) + '%';
+    i++;
+    setTimeout(tick, i === steps.length ? 200 : 380);
+  };
+  setTimeout(tick, 300);
+})();
+
+// ── INIT ────────────────────────────────────────────────────
+function initApp() {
+  animateHeroCounters();
+  renderTrendCards();
+  renderProbMeters();
+  renderDiscoverSection();
+  renderInsights();
+  renderRulesUI();
+  renderQuotaUI();
+  initCharts();
+  renderSpikes('tt-spikes', '#4f6eff', '#00e5ff');
+  renderSpikes('ig-spikes', '#ff2d9b', '#9b5de5');
+  renderSpikes('yt-spikes', '#FF0000', '#ffb800');
+  initScrollAnimations();
+  startLiveCounter();
+  animateGauge(0.942);
+  scheduleToasts();
+  startAutoUpdate();
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+});
+function scrollSec(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── HERO COUNTERS ──────────────────────────────────────────
+function animateHeroCounters() {
+  const targets = [
+    { id: 'hs-1', val: 2.4, suffix: 'B+', dec: 1 },
+    { id: 'hs-2', val: 94, suffix: '%', dec: 0 },
+    { id: 'hs-3', val: 12.8, suffix: 'K', dec: 1 },
+    { id: 'hs-4', val: 72, suffix: 'hr', dec: 0 },
+  ];
+  targets.forEach(({ id, val, suffix, dec }, idx) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      let start = null;
+      const dur = 1800;
+      const run = (ts) => {
+        if (!start) start = ts;
+        const p = Math.min((ts - start) / dur, 1);
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = (e * val).toFixed(dec) + suffix;
+        if (p < 1) requestAnimationFrame(run);
+      };
+      requestAnimationFrame(run);
+    }, idx * 150 + 400);
+  });
+}
+
+// ── LIVE COUNTER ───────────────────────────────────────────
+function startLiveCounter() {
+  let count = 47293;
+  setInterval(() => {
+    count += Math.floor(Math.random() * 9) + 1;
+    const el = document.getElementById('live-count');
+    if (el) el.textContent = count.toLocaleString();
+  }, 1100);
+  setInterval(() => {
+    const el = document.getElementById('last-upd');
+    if (el) el.textContent = (Math.floor(Math.random() * 25) + 5) + 's ago';
+  }, 7000);
+}
+
+// ── GAUGE ──────────────────────────────────────────────────
+function animateGauge(target) {
+  const path = document.getElementById('gauge-path');
+  const num = document.getElementById('gauge-num');
+  if (!path || !num) return;
+  const total = 277;
+  let cur = 0;
+  const run = () => {
+    cur = Math.min(cur + 0.016, target);
+    path.setAttribute('stroke-dashoffset', total - total * cur);
+    num.textContent = Math.floor(cur * 100) + '%';
+    if (cur < target) requestAnimationFrame(run);
+  };
+  setTimeout(() => requestAnimationFrame(run), 600);
+}
+
+// ── TREND DATA ─────────────────────────────────────────────
+const TRENDS = [
+  { tag: '#AestheticCore', platform: 'tiktok', badge: 'hot', type: 'hot', velocity: 340, engagement: 8.4, score: 94, lifespan: '~12d', posts: '2.4M', trend: [2,3,4,3,5,7,9,12,15,19,24], source: 'TikHub API' },
+  { tag: '#GymTokRevival', platform: 'tiktok', badge: 'new', type: 'rising', velocity: 228, engagement: 11.2, score: 88, lifespan: '~18d', posts: '1.8M', trend: [1,2,2,3,4,5,7,8,11,14,18], source: 'TikHub API' },
+  { tag: '#StreetWearEdge', platform: 'instagram', badge: 'rising', type: 'rising', velocity: 179, engagement: 6.7, score: 79, lifespan: '~22d', posts: '3.1M', trend: [4,5,5,6,7,8,9,11,13,15,17], source: 'Meta Graph API' },
+  { tag: '#TechGadgets2025', platform: 'youtube', badge: 'rising', type: 'rising', velocity: 156, engagement: 7.1, score: 72, lifespan: '~28d', posts: '890K', trend: [3,4,5,5,6,7,8,9,10,12,14], source: 'YouTube v3 API' },
+  { tag: '#LuxuryMindset', platform: 'instagram', badge: 'peak', type: '', velocity: 98, engagement: 5.2, score: 65, lifespan: '~8d', posts: '4.2M', trend: [8,10,12,14,15,16,14,13,11,10,9], source: 'HikerAPI' },
+  { tag: '#DarkAcademia', platform: 'tiktok', badge: 'new', type: 'rising', velocity: 143, engagement: 9.3, score: 87, lifespan: '~20d', posts: '560K', trend: [1,1,2,2,3,4,5,7,9,11,14], source: 'TikHub API' },
+  { tag: '#QuietLuxury', platform: 'instagram', badge: 'hot', type: 'hot', velocity: 267, engagement: 7.8, score: 91, lifespan: '~14d', posts: '1.1M', trend: [2,3,4,5,7,9,12,15,18,22,27], source: 'HikerAPI' },
+  { tag: '#ViralPhonk', platform: 'x', badge: 'new', type: 'live', velocity: 312, engagement: 6.1, score: 82, lifespan: '~10d', posts: '420K', trend: [1,2,3,5,8,10,14,17,20,24,29], source: 'X API v2' },
+];
+
+function renderTrendCards(filter) {
+  const container = document.getElementById('trend-cards');
+  if (!container) return;
+  const f = filter || STATE.trendFilter;
+  const data = TRENDS.filter(t => {
+    if (f === 'all') return true;
+    if (f === 'breakout') return t.score >= 85;
+    return t.platform === f;
+  });
+  container.innerHTML = data.map(t => `
+    <div class="tcard ${t.type}" onclick="openTrendDetail('${t.tag}')">
+      <div class="tcard-head">
+        <div><div class="tcard-tag">${t.tag}</div><div class="tcard-src">${t.source}</div></div>
+        <div class="tbadge ${t.type === 'live' ? 'live' : t.badge}">${t.type === 'live' ? '● LIVE' : t.badge.toUpperCase()}</div>
+      </div>
+      <canvas class="tcard-spark" id="sp-${t.tag.replace(/[^a-z0-9]/gi,'')}" height="40"></canvas>
+      <div class="tcard-metrics">
+        <div class="metric"><div class="metric-lbl">VELOCITY</div><div class="metric-val mv-up">+${t.velocity}%</div></div>
+        <div class="metric"><div class="metric-lbl">ENGAGEMENT</div><div class="metric-val mv-bl">${t.engagement}%</div></div>
+        <div class="metric"><div class="metric-lbl">POSTS</div><div class="metric-val mv-cy">${t.posts}</div></div>
+        <div class="metric"><div class="metric-lbl">LIFESPAN</div><div class="metric-val">${t.lifespan}</div></div>
+      </div>
+      <div class="score-row">
+        <div class="score-labels"><span>Breakout Score</span><span style="color:${t.score>=85?'var(--green)':t.score>=65?'var(--amber)':'var(--red)'}">${t.score}/100</span></div>
+        <div class="score-bar"><div class="score-fill" style="width:${t.score}%;background:${t.score>=85?'linear-gradient(90deg,var(--green),var(--cyan))':t.score>=65?'linear-gradient(90deg,var(--amber),var(--pink))':'linear-gradient(90deg,var(--red),var(--pink))'}"></div></div>
+      </div>
+    </div>
+  `).join('');
+  setTimeout(() => data.forEach(drawSparkline), 60);
+}
+
+function drawSparkline(t) {
+  const id = 'sp-' + t.tag.replace(/[^a-z0-9]/gi, '');
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const w = canvas.offsetWidth || 240, h = 40;
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const pts = t.trend, max = Math.max(...pts), min = Math.min(...pts), r = max - min || 1;
+  const px = i => (i / (pts.length - 1)) * (w - 4) + 2;
+  const py = v => h - 4 - ((v - min) / r) * (h - 8);
+  const isHot = t.type === 'hot' || t.type === 'live';
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, isHot ? 'rgba(255,45,155,.35)' : 'rgba(0,229,255,.3)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(pts[0]));
+  pts.forEach((v, i) => { if (i > 0) ctx.lineTo(px(i), py(v)); });
+  ctx.lineTo(px(pts.length - 1), h); ctx.lineTo(px(0), h); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(pts[0]));
+  pts.forEach((v, i) => { if (i > 0) ctx.lineTo(px(i), py(v)); });
+  ctx.strokeStyle = isHot ? '#ff2d9b' : (t.type === 'rising' ? '#00e5ff' : '#7b93ff');
+  ctx.lineWidth = 2; ctx.stroke();
+}
+
+function filterTrends(f, btn) {
+  STATE.trendFilter = f;
+  document.querySelectorAll('#trend-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTrendCards(f);
+}
+
+// ── TREND DETAIL MODAL ──────────────────────────────────────
+function openTrendDetail(tag) {
+  const t = TRENDS.find(x => x.tag === tag);
+  if (!t) return;
+  const html = `
+    <div class="modal-title">${t.tag}</div>
+    <div class="modal-sub">Source: ${t.source} · Platform: ${t.platform.toUpperCase()} · Status: ${t.badge.toUpperCase()}</div>
+    <div class="tdetail-stats">
+      <div class="tds-item"><div class="tds-val mv-up" style="font-family:var(--ff-d)">+${t.velocity}%</div><div class="tds-lbl">VELOCITY</div></div>
+      <div class="tds-item"><div class="tds-val" style="font-family:var(--ff-d);color:var(--cyan)">${t.engagement}%</div><div class="tds-lbl">ENGAGEMENT</div></div>
+      <div class="tds-item"><div class="tds-val" style="font-family:var(--ff-d);color:${t.score>=85?'var(--green)':t.score>=65?'var(--amber)':'var(--red)'}">${t.score}</div><div class="tds-lbl">BREAKOUT SCORE</div></div>
+    </div>
+    <div style="background:rgba(255,255,255,.03);border-radius:var(--r-md);padding:14px;margin-bottom:16px">
+      <canvas id="detail-chart" height="140"></canvas>
+    </div>
+    <div class="g2" style="gap:12px;margin-bottom:16px">
+      <div style="background:rgba(255,255,255,.03);border-radius:var(--r-md);padding:12px">
+        <div style="font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-bottom:5px">PREDICTED PEAK</div>
+        <div style="font-family:var(--ff-d);font-weight:700">Jun 03, 2026</div>
+      </div>
+      <div style="background:rgba(255,255,255,.03);border-radius:var(--r-md);padding:12px">
+        <div style="font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-bottom:5px">ESTIMATED LIFESPAN</div>
+        <div style="font-family:var(--ff-d);font-weight:700">${t.lifespan}</div>
+      </div>
+      <div style="background:rgba(255,255,255,.03);border-radius:var(--r-md);padding:12px">
+        <div style="font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-bottom:5px">TOTAL POSTS</div>
+        <div style="font-family:var(--ff-d);font-weight:700">${t.posts}</div>
+      </div>
+      <div style="background:rgba(0,255,136,.05);border-radius:var(--r-md);padding:12px;border:1px solid rgba(0,255,136,.15)">
+        <div style="font-size:10px;color:var(--text-3);font-family:var(--ff-m);margin-bottom:5px">SATURATION RISK</div>
+        <div style="font-family:var(--ff-d);font-weight:700;color:var(--green)">LOW</div>
+      </div>
+    </div>
+    <div style="background:rgba(79,110,255,.06);border-radius:var(--r-md);padding:14px;border:1px solid rgba(79,110,255,.15);margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;font-family:var(--ff-d);margin-bottom:6px">🧠 AI Analysis</div>
+      <div style="font-size:13px;color:var(--text-2);line-height:1.7">This trend is accelerating <strong style="color:var(--text-1)">+${t.velocity}% faster</strong> than average ${t.platform} content. Creator velocity has doubled in 72 hours. Early movers this week are projected to capture <strong style="color:var(--text-1)">60–80% of organic reach</strong> before saturation.</div>
+    </div>
+    <div class="tdetail-actions">
+      <button class="btn btn-primary btn-sm" onclick="trackTrend('${t.tag}',this)">+ Track This Trend</button>
+      <button class="btn btn-ghost btn-sm" onclick="createAlertForTrend('${t.tag}')">🔔 Set Alert</button>
+      <button class="btn btn-ghost btn-sm" onclick="openExport()">⬇ Export Data</button>
+    </div>`;
+  document.getElementById('trend-modal-content').innerHTML = html;
+  openModal('trend-modal');
+  setTimeout(() => {
+    const ctx = document.getElementById('detail-chart');
+    if (!ctx) return;
+    const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 140);
+    grad.addColorStop(0, 'rgba(79,110,255,.3)');
+    grad.addColorStop(1, 'rgba(79,110,255,0)');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: t.trend.map((_, i) => `D${i + 1}`),
+        datasets: [{ data: t.trend, borderColor: '#4f6eff', backgroundColor: grad, tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#4f6eff', borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: 'Space Mono', size: 9 }, color: 'rgba(240,240,250,.35)' } }, y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: 'Space Mono', size: 9 }, color: 'rgba(240,240,250,.35)' } } } }
+    });
+  }, 80);
+}
+
+function trackTrend(tag, btn) {
+  btn.textContent = '✓ Tracked';
+  btn.disabled = true;
+  toast('📈 Tracking ' + tag, 'You\'ll receive alerts when this trend spikes', 'cyan');
+}
+function createAlertForTrend(tag) {
+  closeModal('trend-modal');
+  setTimeout(() => openAlertModal(), 200);
+}
+
+// ── API CONFIG MODAL ────────────────────────────────────────
+const API_CONFIGS = {
+  youtube: { title: 'YouTube Data API v3', icon: '▶', color: 'linear-gradient(135deg,#FF0000,#cc0000)', fields: [{ key: 'yt_api_key', label: 'API KEY', type: 'text', placeholder: 'AIzaSy...', hint: 'Get from console.developers.google.com → Enable YouTube Data API v3' }, { key: 'yt_max_results', label: 'MAX RESULTS PER SCAN', type: 'number', placeholder: '50', hint: 'Default 50. Higher = more quota used.' }], links: [{ label: 'Get API Key', url: 'https://console.developers.google.com' }, { label: 'Docs', url: 'https://developers.google.com/youtube/v3' }] },
+  'yt-scraper': { title: 'YouTube Playwright Scraper', icon: '🎭', color: 'rgba(79,110,255,.2)', fields: [{ key: 'yt_proxy', label: 'RESIDENTIAL PROXY URL', type: 'text', placeholder: 'http://user:pass@proxy.example.com:8080', hint: 'Required to avoid rate limiting on Shorts feed.' }, { key: 'yt_scrape_interval', label: 'SCRAPE INTERVAL (minutes)', type: 'number', placeholder: '30', hint: 'Minimum 15 minutes recommended.' }] },
+  tiktok: { title: 'TikHub API (TikTok + IG)', icon: '♪', color: 'linear-gradient(135deg,#010101,#69C9D0)', fields: [{ key: 'tiktok_api_key', label: 'TIKHUB API KEY', type: 'text', placeholder: 'sk-...', hint: 'Get from tikhub.io — also covers Instagram Reels on some plans.' }], links: [{ label: 'TikHub Dashboard', url: 'https://tikhub.io' }, { label: 'Docs', url: 'https://docs.tikhub.io' }] },
+  'tt-scraper': { title: 'TikTok Playwright Scraper', icon: '🎭', color: 'rgba(155,93,229,.2)', fields: [{ key: 'tt_proxy', label: 'RESIDENTIAL PROXY URL', type: 'text', placeholder: 'http://user:pass@proxy.example.com:8080', hint: 'Residential proxies required for TikTok scraping.' }, { key: 'tt_session', label: 'SESSION TOKEN (optional)', type: 'text', placeholder: 'sessionid=...', hint: 'Logged-in session greatly increases data quality.' }] },
+  instagram: { title: 'Instagram Graph API', icon: '📷', color: 'linear-gradient(135deg,#405DE6,#C13584)', fields: [{ key: 'ig_access_token', label: 'ACCESS TOKEN', type: 'text', placeholder: 'EAABs...', hint: 'Requires Business or Creator account. Generate via Meta for Developers.' }, { key: 'ig_user_id', label: 'BUSINESS ACCOUNT ID', type: 'text', placeholder: '17841400...', hint: 'Your Instagram Business Account ID.' }], links: [{ label: 'Meta for Developers', url: 'https://developers.facebook.com/docs/instagram-api' }] },
+  hiker: { title: 'HikerAPI / SocialFetch', icon: '🔍', color: 'rgba(255,45,155,.2)', fields: [{ key: 'hiker_api_key', label: 'HIKERAPI KEY', type: 'text', placeholder: 'hkr_...', hint: 'Get from hikerapi.com — covers public Instagram Reels, hashtags, audio.' }], links: [{ label: 'HikerAPI', url: 'https://hikerapi.com' }] },
+  x: { title: 'X (Twitter) API v2', icon: '𝕏', color: 'rgba(255,255,255,.1)', fields: [{ key: 'x_bearer', label: 'BEARER TOKEN', type: 'text', placeholder: 'AAAAAAA...', hint: 'Generate from developer.twitter.com → Projects → Keys and Tokens.' }, { key: 'x_api_key', label: 'API KEY', type: 'text', placeholder: '', hint: 'Optional — needed for write access.' }], links: [{ label: 'X Developer Portal', url: 'https://developer.twitter.com' }, { label: 'Docs', url: 'https://docs.x.com/x-api' }] },
+  'x-stream': { title: 'X Filtered Stream', icon: '📡', color: 'rgba(0,229,255,.15)', fields: [{ key: 'x_stream_rules', label: 'STREAM FILTER RULES (JSON)', type: 'textarea', placeholder: '[{"value":"#trending","tag":"trends"},{"value":"has:video lang:en","tag":"videos"}]', hint: 'JSON array of filter rules per X API v2 filtered stream spec.' }] },
+  openai: { title: 'OpenAI API', icon: '🧠', color: 'rgba(0,255,136,.15)', fields: [{ key: 'openai_key', label: 'API KEY', type: 'text', placeholder: 'sk-...', hint: 'Used for embeddings (text-embedding-3-small) and Whisper STT.' }], links: [{ label: 'OpenAI Platform', url: 'https://platform.openai.com' }] },
+  whisper: { title: 'Whisper STT Config', icon: '🎙', color: 'rgba(79,110,255,.2)', fields: [{ key: 'whisper_mode', label: 'WHISPER MODE', type: 'select', options: ['API (OpenAI Whisper)', 'Local (faster-whisper)', 'Local (whisper.cpp)'], hint: 'API is easiest. Local is faster and cheaper at scale.' }] },
+  redis: { title: 'Redis Streams (Queue)', icon: '⚡', color: 'rgba(255,61,90,.15)', fields: [{ key: 'redis_url', label: 'REDIS URL', type: 'text', placeholder: 'redis://localhost:6379', hint: 'Connection string for your Redis instance. Supports Redis Cloud, Upstash, self-hosted.' }], links: [{ label: 'Redis Cloud', url: 'https://redis.com' }, { label: 'Upstash', url: 'https://upstash.com' }] },
+  clickhouse: { title: 'ClickHouse (Analytics DB)', icon: '📊', color: 'rgba(255,184,0,.15)', fields: [{ key: 'ch_host', label: 'HOST', type: 'text', placeholder: 'localhost', hint: 'ClickHouse server hostname or IP.' }, { key: 'ch_port', label: 'PORT', type: 'number', placeholder: '8123', hint: 'HTTP interface port (default 8123).' }, { key: 'ch_user', label: 'USERNAME', type: 'text', placeholder: 'default' }, { key: 'ch_pass', label: 'PASSWORD', type: 'password', placeholder: '••••••••' }], links: [{ label: 'ClickHouse Cloud', url: 'https://clickhouse.com' } ] },
+};
+
+function openApiConfig(source) {
+  const cfg = API_CONFIGS[source];
+  if (!cfg) return;
+  const saved = STATE.apiKeys[source] || {};
+  const fieldsHtml = cfg.fields.map(f => {
+    if (f.type === 'select') {
+      const opts = f.options.map(o => `<option${saved[f.key] === o ? ' selected' : ''}>${o}</option>`).join('');
+      return `<div class="form-group"><label class="form-label">${f.label}</label><select class="form-select" id="fc-${f.key}">${opts}</select>${f.hint ? `<div class="form-hint">${f.hint}</div>` : ''}</div>`;
+    }
+    if (f.type === 'textarea') return `<div class="form-group"><label class="form-label">${f.label}</label><textarea class="form-textarea" id="fc-${f.key}" placeholder="${f.placeholder||''}">${saved[f.key]||''}</textarea>${f.hint ? `<div class="form-hint">${f.hint}</div>` : ''}</div>`;
+    return `<div class="form-group"><label class="form-label">${f.label}</label><input class="form-input" id="fc-${f.key}" type="${f.type}" placeholder="${f.placeholder||''}" value="${saved[f.key]||''}"/>${f.hint ? `<div class="form-hint">${f.hint}</div>` : ''}</div>`;
+  }).join('');
+  const linksHtml = cfg.links ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">' + cfg.links.map(l => `<a href="${l.url}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">↗ ${l.label}</a>`).join('') + '</div>' : '';
+  document.getElementById('api-modal-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <div style="width:36px;height:36px;border-radius:10px;background:${cfg.color};display:flex;align-items:center;justify-content:center;font-size:17px">${cfg.icon}</div>
+      <div class="modal-title" style="margin-bottom:0">${cfg.title}</div>
+    </div>
+    <div class="modal-sub">Configure credentials and options for this data source</div>
+    ${linksHtml}${fieldsHtml}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveApiConfig('${source}')">Save & Test Connection</button>
+      <button class="btn btn-ghost" onclick="closeModal('api-modal')">Cancel</button>
+    </div>`;
+  openModal('api-modal');
+}
+
+function saveApiConfig(source) {
+  const cfg = API_CONFIGS[source];
+  if (!cfg) return;
+  const saved = {};
+  cfg.fields.forEach(f => {
+    const el = document.getElementById('fc-' + f.key);
+    if (el) saved[f.key] = el.value;
+  });
+  STATE.apiKeys[source] = saved;
+  closeModal('api-modal');
+  // Update display + status
+  updateApiDisplays(source, saved);
+  // Simulate connection test
+  const statusMap = { youtube: 'yt-status', tiktok: 'tiktok-status', instagram: 'ig-status', hiker: 'hiker-status', x: 'x-status', openai: 'oai-status', redis: 'redis-status', clickhouse: 'ch-status' };
+  const statId = statusMap[source];
+  if (statId) {
+    const el = document.getElementById(statId);
+    if (el) { el.className = 'status-badge scanning'; el.textContent = 'TESTING...'; }
+    setTimeout(() => {
+      const hasKey = Object.values(saved).some(v => v && v.length > 3);
+      if (el) { el.className = hasKey ? 'status-badge connected' : 'status-badge error'; el.textContent = hasKey ? '● CONNECTED' : 'NO KEY'; }
+      if (hasKey) { toast(`✓ ${cfg.title}`, 'Connection verified successfully', 'green'); addLog('ok', `${cfg.title} — connection test PASSED`); }
+      else { toast(`⚠ ${cfg.title}`, 'No credentials provided', 'amber'); addLog('warn', `${cfg.title} — no credentials provided`); }
+    }, 1400);
+  } else {
+    toast('✓ Configuration saved', cfg.title + ' settings updated', 'cyan');
+    addLog('ok', cfg.title + ' — config saved');
+  }
+}
+
+function updateApiDisplays(source, saved) {
+  const masks = { youtube: ['yt-key-display', saved.yt_api_key], tiktok: ['tiktok-key-display', saved.tiktok_api_key], instagram: ['ig-key-display', saved.ig_access_token], hiker: ['hiker-key-display', saved.hiker_api_key], x: ['x-key-display', saved.x_bearer], openai: ['oai-key-display', saved.openai_key], redis: ['redis-display', saved.redis_url], clickhouse: ['ch-display', (saved.ch_host ? saved.ch_host + ':' + (saved.ch_port||'8123') : null)] };
+  const m = masks[source];
+  if (m && m[0]) {
+    const el = document.getElementById(m[0]);
+    if (el && m[1]) el.textContent = maskKey(m[1]);
+  }
+}
+function maskKey(k) { if (!k) return 'Not set'; if (k.length <= 8) return '•'.repeat(k.length); return k.slice(0, 4) + '•'.repeat(Math.min(k.length - 8, 20)) + k.slice(-4); }
+
+// ── SCANNER ─────────────────────────────────────────────────
+function toggleScanner(btn) {
+  if (STATE.scannerRunning) {
+    stopScanner(btn);
+  } else {
+    startScanner(btn);
+  }
+}
+
+function startScanner(btn) {
+  STATE.scannerRunning = true;
+  btn.textContent = '⏹ Stop Scanner';
+  btn.className = 'btn btn-red btn-sm';
+  document.getElementById('log-status').querySelector('span:last-child').textContent = 'Scanner active — ingesting data from all configured sources';
+  const sources = Object.keys(STATE.apiKeys).filter(s => {
+    const k = STATE.apiKeys[s];
+    return k && Object.values(k).some(v => v && v.length > 3);
+  });
+  if (sources.length === 0) {
+    addLog('warn', 'No API keys configured — showing demo scan');
+    runDemoScan();
+  } else {
+    addLog('ok', 'Scanner started — ' + sources.length + ' source(s) active');
+    sources.forEach(s => { addLog('scan', 'Worker spawned for: ' + (API_CONFIGS[s]?.title || s)); });
+  }
+  STATE.scanInterval = setInterval(runDemoScan, 6000);
+  toast('▶ Scanner Started', 'Ingestion workers are running', 'cyan');
+}
+
+function stopScanner(btn) {
+  STATE.scannerRunning = false;
+  clearInterval(STATE.scanInterval);
+  btn.textContent = '▶ Start Scanner';
+  btn.className = 'btn btn-ghost btn-sm';
+  document.getElementById('log-status').querySelector('span:last-child').textContent = 'Scanner stopped';
+  addLog('warn', 'Scanner stopped by user');
+  toast('⏹ Scanner Stopped', 'All ingestion workers halted', 'amber');
+}
+
+function runScanNow(btn) {
+  btn.classList.add('btn-spin');
+  btn.querySelector ? null : null;
+  const orig = btn.textContent;
+  btn.textContent = '⟳ Scanning...';
+  btn.disabled = true;
+  runDemoScan();
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.disabled = false;
+    btn.classList.remove('btn-spin');
+    toast('✓ Scan Complete', 'Dashboard updated with latest signals', 'green');
+  }, 2800);
+}
+
+const DEMO_LOG_MSGS = [
+  ['scan', 'YouTube API → search.list — querying "trending shorts" (50 results)'],
+  ['info', 'TikHub API → /trending/hashtags — page 1 of 3'],
+  ['scan', 'X API → filtered stream — received 47 tweets matching rules'],
+  ['ok', 'Feature extraction complete — 128-dim embeddings generated for 12 posts'],
+  ['info', 'Deduplication pass — 3 cross-platform matches found'],
+  ['ok', 'Trend score computed: #AestheticCore → 94.2 (↑ from 89.1)'],
+  ['warn', 'YouTube quota: 34,200 / 100,000 units used today'],
+  ['scan', 'Instagram Reels — HikerAPI → /hashtag/feed trending=true (page 2)'],
+  ['ok', 'New breakout signal detected: #GymTokRevival score crossed 85'],
+  ['info', 'Redis XADD: trend_events stream — 23 new events queued'],
+  ['scan', 'Playwright worker → TikTok hashtag page scrape started'],
+  ['ok', 'ClickHouse INSERT — 214 rows written to trend_timeseries table'],
+  ['info', 'Whisper STT — processing 3 trending audio clips for phrase extraction'],
+  ['ok', 'Cross-platform spread detected: #QuietLuxury on TikTok + Instagram + X'],
+  ['warn', 'Rate limit approaching on X API — reducing poll frequency to 15s'],
+  ['ok', 'Creator velocity update: 847 new creators entered #GymTokRevival'],
+  ['scan', 'OpenAI embeddings — clustering 240 posts by semantic similarity'],
+  ['info', 'Saturation check: #LuxuryMindset showing decline signals (−12% velocity)'],
+  ['ok', 'Alert rule fired: "Breakout Score > 85" → #DarkAcademia now 87.1'],
+  ['scan', 'YouTube → commentThreads.list — processing comment velocity for top 10 videos'],
+];
+
+let demoLogIdx = 0;
+function runDemoScan() {
+  const count = Math.floor(Math.random() * 3) + 2;
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const msg = DEMO_LOG_MSGS[demoLogIdx % DEMO_LOG_MSGS.length];
+      addLog(msg[0], msg[1]);
+      demoLogIdx++;
+      // Update queue counters
+      STATE.queuePending = Math.max(0, STATE.queuePending + Math.floor(Math.random() * 8) - 3);
+      STATE.queueProcessed += Math.floor(Math.random() * 5) + 1;
+      STATE.queueFailed = Math.max(0, STATE.queueFailed + (Math.random() < 0.08 ? 1 : 0));
+      updateQueueUI();
+      addQueueLog();
+    }, i * 500);
+  }
+  // Drift trend scores slightly
+  TRENDS.forEach(t => {
+    const drift = (Math.random() - 0.45) * 4;
+    t.score = Math.max(30, Math.min(99, Math.round(t.score + drift)));
+    t.velocity = Math.max(20, Math.round(t.velocity + (Math.random() - 0.45) * 8));
+  });
+}
+
+// ── LOG SYSTEM ──────────────────────────────────────────────
+function addLog(level, msg) {
+  const logEl = document.getElementById('scan-log');
+  if (!logEl) return;
+  const now = new Date();
+  const ts = now.toTimeString().slice(0, 8);
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-ts">${ts}</span><span class="log-lvl ${level}">${level.toUpperCase()}</span><span class="log-msg">${msg}</span>`;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+  // Keep max 200 lines
+  while (logEl.children.length > 200) logEl.removeChild(logEl.firstChild);
+}
+
+function clearLog() {
+  const el = document.getElementById('scan-log');
+  if (el) el.innerHTML = '';
+  toast('Log cleared', '', 'blue');
+}
+
+// ── QUEUE UI ────────────────────────────────────────────────
+function updateQueueUI() {
+  const set = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val.toLocaleString(); };
+  set('q-pending', STATE.queuePending);
+  set('q-processed', STATE.queueProcessed);
+  set('q-failed', STATE.queueFailed);
+  const rate = Math.floor(Math.random() * 12) + 4;
+  set('q-rate', rate);
+}
+function addQueueLog() {
+  const el = document.getElementById('queue-log');
+  if (!el) return;
+  const msgs = ['Enqueued: YouTube search.list batch (50 items)', 'Processed: TikHub trending hashtags (32ms)', 'Enqueued: X filtered stream event (12 tweets)', 'Processed: Instagram Reels hashtag page (44ms)', 'Enqueued: ClickHouse write batch (214 rows)', 'Processed: OpenAI embeddings request (189ms)', 'Enqueued: Playwright scrape task (TikTok hashtag)'];
+  const ts = new Date().toTimeString().slice(0, 8);
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-ts">${ts}</span><span class="log-lvl scan">QUEUE</span><span class="log-msg">${msg}</span>`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+  while (el.children.length > 100) el.removeChild(el.firstChild);
+}
+function flushQueue() {
+  STATE.queuePending = 0;
+  updateQueueUI();
+  addLog('warn', 'Queue flushed by user — all pending jobs cleared');
+  toast('Queue flushed', 'All pending jobs removed', 'amber');
+}
+function enqueueAll() {
+  STATE.queuePending += 48;
+  updateQueueUI();
+  addLog('scan', 'All source workers enqueued — 48 jobs added to Redis stream');
+  toast('⚡ All sources enqueued', '48 ingestion jobs queued', 'cyan');
+  for (let i = 0; i < 5; i++) setTimeout(addQueueLog, i * 300);
+}
+
+// ── QUOTA UI ────────────────────────────────────────────────
+function renderQuotaUI() {
+  const data = [
+    { name: 'YouTube Data API v3', used: 34200, max: 100000, unit: 'units/day', pct: 34, color: 'linear-gradient(90deg,var(--green),var(--cyan))' },
+    { name: 'TikHub API', used: 1800, max: 10000, unit: 'req/day', pct: 18, color: 'linear-gradient(90deg,var(--cyan),var(--blue))' },
+    { name: 'Instagram Graph API', used: 450, max: 5000, unit: 'req/day', pct: 9, color: 'linear-gradient(90deg,var(--pink),var(--purple))' },
+    { name: 'X API v2', used: 310000, max: 500000, unit: 'tweets/month', pct: 62, color: 'linear-gradient(90deg,var(--amber),var(--pink))' },
+    { name: 'OpenAI API', used: 12400, max: 100000, unit: 'tokens/day', pct: 12, color: 'linear-gradient(90deg,var(--green),var(--blue))' },
+  ];
+  const el = document.getElementById('quota-display');
+  if (!el) return;
+  el.innerHTML = data.map(d => `
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:var(--text-2)">${d.name}</span>
+        <span style="font-family:var(--ff-m);font-size:11px;color:${d.pct > 80 ? 'var(--red)' : d.pct > 60 ? 'var(--amber)' : 'var(--text-3)'}">${d.used.toLocaleString()} / ${d.max.toLocaleString()} ${d.unit}</span>
+      </div>
+      <div class="quota-bar"><div class="quota-fill" style="width:${d.pct}%;background:${d.color}"></div></div>
+    </div>`).join('');
+}
+
+// ── FORMULA EDITOR ──────────────────────────────────────────
+function openFormulaEditor() {
+  toast('Formula Editor', 'Opening weight configuration panel', 'blue');
+}
+
+// ── PROB METERS ─────────────────────────────────────────────
+function renderProbMeters() {
+  const el = document.getElementById('prob-meters');
+  if (!el) return;
+  const items = [
+    { label: '#AestheticCore', pct: 94, type: 'cyan' },
+    { label: '#GymTokRevival', pct: 88, type: 'cyan' },
+    { label: '#StreetWearEdge', pct: 79, type: 'blue' },
+    { label: '#TechGadgets2025', pct: 72, type: 'pink' },
+    { label: '#LuxuryMindset', pct: 65, type: 'pink' },
+    { label: '#SoftLife', pct: 52, type: 'purple' },
+  ];
+  el.innerHTML = items.map(i => `
+    <div class="prob-item">
+      <div class="prob-label"><span>${i.label}</span><span style="color:${i.type==='cyan'?'var(--cyan)':i.type==='blue'?'var(--blue-b)':'var(--pink)'}">${i.pct}%</span></div>
+      <div class="prob-bar"><div class="prob-fill ${i.type!=='cyan'&&i.type!=='blue'?'pink':''}" style="width:${i.pct}%${i.type==='blue'?';background:linear-gradient(90deg,var(--blue),var(--blue-b));box-shadow:0 0 8px rgba(79,110,255,.4)':''}"></div></div>
+    </div>`).join('');
+}
+
+// ── CHARTS ──────────────────────────────────────────────────
+function initCharts() {
+  Chart.defaults.color = 'rgba(240,240,250,.5)';
+  Chart.defaults.borderColor = 'rgba(255,255,255,.05)';
+
+  // Line chart
+  const lc = document.getElementById('lineChart');
+  if (lc) {
+    const g1 = lc.getContext('2d').createLinearGradient(0,0,0,190);
+    g1.addColorStop(0,'rgba(79,110,255,.3)'); g1.addColorStop(1,'rgba(79,110,255,0)');
+    const g2 = lc.getContext('2d').createLinearGradient(0,0,0,190);
+    g2.addColorStop(0,'rgba(0,229,255,.2)'); g2.addColorStop(1,'rgba(0,229,255,0)');
+    STATE.charts.line = new Chart(lc, {
+      type: 'line',
+      data: { labels: ['May 1','May 4','May 7','May 10','May 13','May 16','May 19','May 22','May 25','May 28'], datasets: [{ label: 'Trend Velocity', data: [18,24,21,28,35,44,52,61,78,94], borderColor:'#4f6eff', backgroundColor:g1, tension:.4, fill:true, pointRadius:3, pointBackgroundColor:'#4f6eff', borderWidth:2 },{ label:'Breakout Events', data:[8,10,12,11,16,20,24,31,40,52], borderColor:'#00e5ff', backgroundColor:g2, tension:.4, fill:true, pointRadius:3, pointBackgroundColor:'#00e5ff', borderWidth:1.5, borderDash:[4,3] }] },
+      options: { responsive:true, maintainAspectRatio:false, interaction:{intersect:false,mode:'index'}, plugins:{ legend:{labels:{font:{family:'Space Mono',size:10},boxWidth:12,padding:14}}, tooltip:{backgroundColor:'rgba(13,13,26,.95)',borderColor:'rgba(79,110,255,.3)',borderWidth:1,titleFont:{family:'Syne',weight:'700'},bodyFont:{family:'Space Mono',size:11},padding:12} }, scales:{ x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{font:{family:'Space Mono',size:9}}}, y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{font:{family:'Space Mono',size:9}}} } }
+    });
+  }
+  // Radar
+  const rc = document.getElementById('radarChart');
+  if (rc) {
+    new Chart(rc, {
+      type:'radar',
+      data:{ labels:['Fashion','Fitness','Tech','Food','Gaming','Beauty','Travel'], datasets:[{ label:'Current', data:[88,94,72,65,58,80,70], backgroundColor:'rgba(0,229,255,.1)', borderColor:'#00e5ff', pointBackgroundColor:'#00e5ff', borderWidth:2, pointRadius:4 },{ label:'7 Days Ago', data:[65,72,60,70,52,74,68], backgroundColor:'rgba(155,93,229,.08)', borderColor:'#9b5de5', pointBackgroundColor:'#9b5de5', borderWidth:1.5, pointRadius:3 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{font:{family:'Space Mono',size:9},boxWidth:9}}}, scales:{ r:{ grid:{color:'rgba(255,255,255,.06)'}, angleLines:{color:'rgba(255,255,255,.04)'}, pointLabels:{font:{family:'Space Mono',size:9},color:'rgba(240,240,250,.45)'}, ticks:{display:false} } } }
+    });
+  }
+  // Bar
+  const bc = document.getElementById('barChart');
+  if (bc) {
+    const bg = bc.getContext('2d').createLinearGradient(0,0,0,150);
+    bg.addColorStop(0,'#ff2d9b'); bg.addColorStop(1,'rgba(79,110,255,.5)');
+    new Chart(bc, { type:'bar', data:{ labels:['#Aesthetic','#GymTok','#Street','#Tech','#Luxury','#DarkAcad'], datasets:[{ data:[94,88,79,72,65,87], backgroundColor:bg, borderRadius:5, borderSkipped:false }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:9}}}, y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{font:{family:'Space Mono',size:9}}} } } });
+  }
+  // Doughnut
+  const dc = document.getElementById('doughnutChart');
+  if (dc) {
+    new Chart(dc, { type:'doughnut', data:{ labels:['TikTok','Instagram','YouTube','X'], datasets:[{ data:[44,28,17,11], backgroundColor:['rgba(0,229,255,.8)','rgba(255,45,155,.75)','rgba(255,0,0,.7)','rgba(79,110,255,.7)'], borderColor:'var(--bg-card)', borderWidth:3, hoverOffset:6 }] }, options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'bottom',labels:{font:{family:'Space Mono',size:9},padding:8,boxWidth:9}}} } });
+  }
+  // Time heatmap
+  const tc = document.getElementById('timeChart');
+  if (tc) {
+    const tg = tc.getContext('2d').createLinearGradient(0,0,0,150);
+    tg.addColorStop(0,'#00e5ff'); tg.addColorStop(1,'rgba(0,229,255,.3)');
+    new Chart(tc, { type:'bar', data:{ labels:['6AM','9AM','12PM','3PM','6PM','8PM','10PM','12AM'], datasets:[{ data:[22,45,48,38,72,88,94,61], backgroundColor:tg, borderRadius:4, borderSkipped:false }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{family:'Space Mono',size:9}}}, y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{font:{family:'Space Mono',size:9}}} } } });
+  }
+}
+
+// ── SPIKES ──────────────────────────────────────────────────
+function renderSpikes(id, c1, c2) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = Array.from({length:28}, () => {
+    const h = Math.max(3, Math.floor(Math.random() * 34));
+    return `<div class="spike-bar" style="height:${h}px;opacity:${0.35 + (h/34)*0.65};background:linear-gradient(to top,${c1},${c2})"></div>`;
+  }).join('');
+}
+
+// ── DISCOVER ────────────────────────────────────────────────
+function renderDiscoverSection() {
+  const niches = [
+    { emoji:'🏋️', name:'Gym & Fitness Aesthetics', meta:'Low saturation · 2.4M weekly reach', score:98, cls:'ns-h' },
+    { emoji:'💻', name:'Tech Gadget Unboxing', meta:'Medium saturation · 4.1M weekly reach', score:91, cls:'ns-h' },
+    { emoji:'🌿', name:'Quiet Luxury Lifestyle', meta:'Rising fast · 1.8M weekly reach', score:87, cls:'ns-h' },
+    { emoji:'🎨', name:'Dark Academia Aesthetic', meta:'Breakout phase · 890K weekly reach', score:74, cls:'ns-m' },
+    { emoji:'🍜', name:'Street Food Adventures', meta:'Medium saturation · 3.2M weekly reach', score:69, cls:'ns-m' },
+  ];
+  const nl = document.getElementById('niche-list');
+  if (nl) nl.innerHTML = niches.map(n => `<div class="niche-item" onclick="openNicheDetail('${n.name}')"><div class="niche-emoji">${n.emoji}</div><div class="niche-info"><div class="niche-name">${n.name}</div><div class="niche-meta">${n.meta}</div></div><span class="niche-score ${n.cls}">${n.score}</span></div>`).join('');
+
+  const sounds = [
+    { name:'Sunset Drive Lo-Fi', uses:'84K uses', trend:'+312%' },
+    { name:'Y2K Pop Remix', uses:'201K uses', trend:'+228%' },
+    { name:'Hyperpop Rave Beat', uses:'47K uses', trend:'+198%' },
+    { name:'Cinematic Drill', uses:'139K uses', trend:'+174%' },
+    { name:'Chill Phonk Edit', uses:'320K uses', trend:'+156%' },
+    { name:'Bedroom Pop Acoustic', uses:'88K uses', trend:'+143%' },
+  ];
+  const sl = document.getElementById('sounds-list');
+  if (sl) sl.innerHTML = sounds.map((s,i) => `<div class="sound-chip"><button class="sound-play" id="snd-${i}" onclick="toggleSound(${i},this)">▶</button><div><div class="sound-name">${s.name}</div><div class="sound-stat">${s.uses}</div></div><span class="sound-trend-val">${s.trend}</span></div>`).join('');
+
+  const aesthetics = [
+    { label:'Mob Wife Aesthetic', c:'rgba(155,93,229,.12)', bc:'rgba(155,93,229,.25)', tc:'var(--purple-b)' },
+    { label:'Clean Girl Era', c:'rgba(0,229,255,.08)', bc:'rgba(0,229,255,.2)', tc:'var(--cyan)' },
+    { label:'Brat Summer 2.0', c:'rgba(255,45,155,.08)', bc:'rgba(255,45,155,.2)', tc:'var(--pink)' },
+    { label:'Dark Cottagecore', c:'rgba(79,110,255,.1)', bc:'rgba(79,110,255,.25)', tc:'var(--blue-b)' },
+    { label:'Quiet Luxury', c:'rgba(0,255,136,.08)', bc:'rgba(0,255,136,.2)', tc:'var(--green)' },
+    { label:'Dopamine Dressing', c:'rgba(255,184,0,.08)', bc:'rgba(255,184,0,.2)', tc:'var(--amber)' },
+  ];
+  const al = document.getElementById('aes-list');
+  if (al) al.innerHTML = aesthetics.map(a => `<span class="aes-tag" style="background:${a.c};border:1px solid ${a.bc};color:${a.tc}" onclick="exploreAesthetic('${a.label}')">${a.label}</span>`).join('');
+}
+
+let currentSound = null;
+let soundInterval = null;
+function toggleSound(idx, btn) {
+  if (currentSound === idx) {
+    btn.textContent = '▶';
+    btn.classList.remove('sound-playing');
+    clearInterval(soundInterval);
+    currentSound = null;
+    return;
+  }
+  // Stop previous
+  if (currentSound !== null) {
+    const prev = document.getElementById('snd-' + currentSound);
+    if (prev) { prev.textContent = '▶'; prev.classList.remove('sound-playing'); }
+  }
+  currentSound = idx;
+  btn.textContent = '■';
+  btn.classList.add('sound-playing');
+  clearInterval(soundInterval);
+  toast('🎵 Now Playing', btn.closest('.sound-chip').querySelector('.sound-name').textContent, 'blue');
+  soundInterval = setTimeout(() => {
+    btn.textContent = '▶'; btn.classList.remove('sound-playing'); currentSound = null;
+  }, 15000); // auto-stop after 15s
+}
+
+function openNicheDetail(name) { toast('🎯 ' + name, 'Detailed niche analysis loading...', 'cyan'); }
+function exploreAesthetic(label) { toast('🔥 ' + label, 'Loading creator opportunities for this aesthetic', 'pink'); }
+
+// ── AI INSIGHTS ─────────────────────────────────────────────
+const INSIGHT_POOL = [
+  { icon:'⚡', cls:'blue', title:'Mega Signal Alert', meta:'CONFIDENCE: 94.2% · UPDATED 2 MIN AGO', feat:true, text:'<strong>#AestheticCore is accelerating 340% faster than average beauty content</strong> across all platforms. Creator velocity has tripled in 72 hours. The algorithm shows strong preference for high-retention short-form tutorials. <strong>Early movers this week are projected to capture 60–80% of organic reach</strong> before saturation.' },
+  { icon:'📊', cls:'cyan', title:'Algorithm Behavior', meta:'TikTok Signal', feat:false, text:'TikTok algorithm currently favors <strong>high-retention (85%+) content under 28 seconds</strong>. Videos with trending audio in the first 3 seconds are receiving 2.4× more FYP distribution this week.' },
+  { icon:'⚠️', cls:'pink', title:'Saturation Warning', meta:'#BookTok Sector', feat:false, text:'#BookTok is showing early saturation signals. <strong>Engagement per post dropped 31% over 14 days</strong> as creator count surged 180%. Pivot to #DarkAcademia or #LiteraryAesthetic for untapped reach.' },
+  { icon:'🚀', cls:'green', title:'Creator Opportunity', meta:'Gym & Fitness', feat:false, text:'GymTok niche has a <strong>massive engagement gap</strong> — only 2,100 active creators serving 18M+ engaged followers. Average CPE is 3× industry benchmark. <strong>Enter now for maximum first-mover advantage.</strong>' },
+  { icon:'🎵', cls:'blue', title:'Sound Trend Rising', meta:'Audio Intelligence', feat:false, text:'"Sunset Drive Lo-Fi" audio has been adopted by <strong>84K creators in 9 days</strong>. Highest adoption rate in the lo-fi category since 2024. Pair with outdoor aesthetic content for maximum FYP reach.' },
+  { icon:'📡', cls:'cyan', title:'Cross-Platform Signal', meta:'Multi-Platform Detection', feat:false, text:'<strong>#QuietLuxury is spreading from Instagram to TikTok to YouTube simultaneously</strong>. Cross-platform trends historically have 2.8× longer lifespans and reach more diverse demographics.' },
+];
+let insightSet = INSIGHT_POOL.slice(0, 4);
+
+function renderInsights() {
+  const grid = document.getElementById('insights-grid');
+  if (!grid) return;
+  grid.innerHTML = insightSet.map(i => `
+    <div class="insight-card ${i.feat ? 'feat' : ''}" ${i.feat ? 'style="grid-column:1/-1"' : ''}>
+      <div class="insight-head">
+        <div class="ins-icon" style="background:rgba(${i.cls==='blue'?'79,110,255':i.cls==='cyan'?'0,229,255':i.cls==='pink'?'255,45,155':'0,255,136'},.12)">${i.icon}</div>
+        <div><div class="ins-title">${i.title}</div><div class="ins-meta">${i.meta}</div></div>
+      </div>
+      <p class="ins-text">"${i.text}"</p>
+      <div class="ai-tag">🤖 AI-GENERATED · TRENDPULSE-7B</div>
+    </div>`).join('');
+}
+
+function generateInsights(btn) {
+  btn.textContent = '⟳ Generating...';
+  btn.disabled = true;
+  // Shuffle and pick 4 insights
+  setTimeout(() => {
+    const shuffled = [...INSIGHT_POOL].sort(() => Math.random() - 0.5);
+    insightSet = shuffled.slice(0, 4);
+    insightSet[0].feat = true;
+    renderInsights();
+    btn.textContent = '🧠 Generate New Insights';
+    btn.disabled = false;
+    toast('🧠 New Insights Ready', 'AI analysis refreshed with latest signals', 'cyan');
+  }, 1800);
+}
+
+// ── ALERT RULES ─────────────────────────────────────────────
+function openAlertModal() { openModal('alert-modal'); }
+function saveAlertRule() {
+  const name = document.getElementById('alert-name').value.trim();
+  if (!name) { toast('⚠ Name required', 'Please enter an alert rule name', 'amber'); return; }
+  const rule = {
+    id: Date.now(),
+    name,
+    metric: document.getElementById('alert-metric').value,
+    cond: document.getElementById('alert-cond').value,
+    thresh: document.getElementById('alert-thresh').value,
+    platform: document.getElementById('alert-plat').value,
+    via: document.getElementById('alert-via').value,
+    active: true,
+  };
+  STATE.alertRules.push(rule);
+  closeModal('alert-modal');
+  renderRulesUI();
+  toast('✓ Alert Rule Created', '"' + name + '" is now active', 'green');
+  addLog('ok', 'Alert rule created: ' + name + ' (' + rule.metric + ' ' + rule.cond + ' ' + rule.thresh + ')');
+}
+function renderRulesUI() {
+  const list = document.getElementById('rules-list');
+  const noR = document.getElementById('no-rules');
+  if (!list) return;
+  if (STATE.alertRules.length === 0) { list.innerHTML = ''; if (noR) noR.style.display = 'block'; return; }
+  if (noR) noR.style.display = 'none';
+  list.innerHTML = STATE.alertRules.map(r => `
+    <div class="rule-item ${r.active ? 'active-rule' : ''}">
+      <div style="width:7px;height:7px;border-radius:50%;background:${r.active?'var(--green)':'var(--text-3)'};flex-shrink:0"></div>
+      <div class="rule-label"><strong>${r.name}</strong></div>
+      <span class="rule-cond">${r.metric} ${r.cond} ${r.thresh} · ${r.platform}</span>
+      <button class="btn btn-ghost btn-sm" onclick="toggleRule(${r.id})">${r.active ? 'Pause' : 'Resume'}</button>
+      <button class="btn btn-red btn-sm" onclick="deleteRule(${r.id})">Delete</button>
+    </div>`).join('');
+}
+function toggleRule(id) {
+  const r = STATE.alertRules.find(x => x.id === id);
+  if (r) { r.active = !r.active; renderRulesUI(); toast(r.active ? '▶ Rule Resumed' : '⏸ Rule Paused', r.name, r.active ? 'green' : 'amber'); }
+}
+function deleteRule(id) {
+  STATE.alertRules = STATE.alertRules.filter(x => x.id !== id);
+  renderRulesUI();
+  toast('🗑 Rule Deleted', 'Alert rule removed', 'red');
+}
+
+// ── EXPORT ──────────────────────────────────────────────────
+function openExport() { openModal('export-modal'); }
+function doExport() {
+  const fmt = document.getElementById('exp-format').value;
+  const scope = document.getElementById('exp-scope').value;
+  closeModal('export-modal');
+  // Generate actual downloadable file
+  const ts = new Date().toISOString().slice(0, 10);
+  if (fmt.startsWith('CSV')) {
+    const headers = 'Tag,Platform,Velocity,Engagement,Score,Posts,Lifespan,Source\n';
+    const rows = TRENDS.map(t => `"${t.tag}","${t.platform}","+${t.velocity}%","${t.engagement}%","${t.score}","${t.posts}","${t.lifespan}","${t.source}"`).join('\n');
+    downloadFile('trendpulse-export-' + ts + '.csv', 'text/csv', headers + rows);
+  } else if (fmt.startsWith('JSON')) {
+    downloadFile('trendpulse-export-' + ts + '.json', 'application/json', JSON.stringify({ exported: ts, scope, trends: TRENDS }, null, 2));
+  } else if (fmt.startsWith('Markdown')) {
+    const md = '# TrendPulse AI Export\n\n**Exported:** ' + ts + '\n\n## Trends\n\n' + TRENDS.map(t => `### ${t.tag}\n- Platform: ${t.platform}\n- Velocity: +${t.velocity}%\n- Score: ${t.score}/100\n`).join('\n');
+    downloadFile('trendpulse-export-' + ts + '.md', 'text/markdown', md);
+  } else {
+    toast('📄 PDF Report', 'PDF generation requires Pro plan — showing preview', 'amber');
+    return;
+  }
+  toast('⬇ Export Complete', fmt.split('—')[0].trim() + ' file downloaded', 'green');
+}
+function downloadFile(filename, mime, content) {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── PRICING ─────────────────────────────────────────────────
+function toggleBilling(track) {
+  STATE.annualBilling = !STATE.annualBilling;
+  track.classList.toggle('on', STATE.annualBilling);
+  document.querySelectorAll('.pv').forEach(el => {
+    el.textContent = STATE.annualBilling ? el.dataset.a : el.dataset.m;
+  });
+  document.querySelectorAll('.bill-period').forEach(el => {
+    el.textContent = STATE.annualBilling ? 'annually' : 'monthly';
+  });
+  if (STATE.annualBilling) toast('💰 Annual billing activated', 'Saving 40% on all plans', 'green');
+}
+function openCheckout(plan, price) {
+  toast('🚀 ' + plan + ' Plan', `Starting your ${plan} trial — $${price}/mo`, 'cyan');
+  setTimeout(() => toast('📧 Check your email', 'Verification link sent to complete signup', 'blue'), 1500);
+}
+
+// ── AUTH MODALS ─────────────────────────────────────────────
+function openSignIn() {
+  document.getElementById('api-modal-content').innerHTML = `
+    <div class="modal-title">Sign in to TrendPulse AI</div>
+    <div class="modal-sub">Continue to your trend intelligence dashboard</div>
+    <div class="form-group"><label class="form-label">EMAIL</label><input class="form-input" id="si-email" type="email" placeholder="you@example.com"/></div>
+    <div class="form-group"><label class="form-label">PASSWORD</label><input class="form-input" id="si-pass" type="password" placeholder="••••••••"/></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px" onclick="doSignIn()">Sign In</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="openSignUp()">Create Account Instead</button>`;
+  openModal('api-modal');
+}
+function doSignIn() {
+  const email = document.getElementById('si-email')?.value;
+  if (!email) { toast('⚠ Email required', '', 'amber'); return; }
+  closeModal('api-modal');
+  toast('✓ Signed in', 'Welcome back to TrendPulse AI', 'green');
+}
+function openSignUp() {
+  document.getElementById('api-modal-content').innerHTML = `
+    <div class="modal-title">Get Early Access</div>
+    <div class="modal-sub">Join 12,800+ creators on the waitlist</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">FIRST NAME</label><input class="form-input" id="su-fname" placeholder="Alex"/></div>
+      <div class="form-group"><label class="form-label">LAST NAME</label><input class="form-input" id="su-lname" placeholder="Smith"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">EMAIL</label><input class="form-input" id="su-email" type="email" placeholder="you@example.com"/></div>
+    <div class="form-group"><label class="form-label">ROLE</label><select class="form-select" id="su-role"><option>Solo Creator</option><option>Brand / Agency</option><option>Developer</option><option>Enterprise</option></select></div>
+    <div class="form-group"><label class="form-label">PLAN</label><select class="form-select" id="su-plan"><option>Starter ($29/mo)</option><option>Pro ($79/mo)</option><option>Enterprise ($299/mo)</option></select></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px" onclick="doSignUp()">⚡ Join Waitlist</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="openSignIn()">Already have an account?</button>`;
+  openModal('api-modal');
+}
+function doSignUp() {
+  const email = document.getElementById('su-email')?.value;
+  if (!email) { toast('⚠ Email required', '', 'amber'); return; }
+  closeModal('api-modal');
+  toast('🎉 You\'re on the list!', 'We\'ll reach out within 24 hours', 'green');
+  setTimeout(() => toast('📧 Confirmation sent', 'Check ' + email + ' for your access details', 'cyan'), 1600);
+}
+
+// ── CONTACT ─────────────────────────────────────────────────
+function openContact() {
+  document.getElementById('api-modal-content').innerHTML = `
+    <div class="modal-title">Contact TrendPulse AI</div>
+    <div class="modal-sub">We typically respond within a few hours</div>
+    <div class="form-group"><label class="form-label">NAME</label><input class="form-input" id="ct-name" placeholder="Your name"/></div>
+    <div class="form-group"><label class="form-label">EMAIL</label><input class="form-input" id="ct-email" type="email" placeholder="you@example.com"/></div>
+    <div class="form-group"><label class="form-label">SUBJECT</label><select class="form-select" id="ct-sub"><option>Enterprise Sales</option><option>Technical Support</option><option>API Partnership</option><option>Press / Media</option><option>Other</option></select></div>
+    <div class="form-group"><label class="form-label">MESSAGE</label><textarea class="form-textarea" id="ct-msg" placeholder="Tell us about your use case..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doContact()">Send Message</button>`;
+  openModal('api-modal');
+}
+function doContact() {
+  closeModal('api-modal');
+  toast('✓ Message Sent', 'We\'ll respond within a few hours', 'green');
+}
+
+// ── SOCIAL LINKS ────────────────────────────────────────────
+function socialClick(platform) { toast('↗ ' + platform, 'Opening TrendPulse AI on ' + platform, 'blue'); }
+function showComingSoon(label) { toast('🚧 ' + label, 'This page is coming soon', 'amber'); }
+
+// ── TOAST ───────────────────────────────────────────────────
+function toast(title, sub, color = 'blue') {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<div class="t-dot ${color}"></div><div><div class="t-title">${title}</div>${sub ? `<div class="t-sub">${sub}</div>` : ''}</div>`;
+  container.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 350); }, 4200);
+}
+
+// Auto toasts
+const AUTO_TOASTS = [
+  ['🔥 New Breakout', '#AestheticCore surged +340% in 2 hours', 'pink'],
+  ['⚡ Trend Alert', '#GymTok revival trending in 12 regions', 'cyan'],
+  ['🎵 Rising Sound', '"Sunset Drive Lo-Fi" — +312% uses this week', 'blue'],
+  ['🧠 AI Prediction', '#QuietLuxury peak expected in 3 days', 'blue'],
+  ['📈 Score Update', '#StreetWearEdge breakout score: 79/100', 'green'],
+  ['⚠️ Saturation Warning', '#BookTok engagement dropping — pivot now', 'amber'],
+  ['🚀 Creator Opportunity', 'GymTok niche has 3× avg CPE right now', 'green'],
+  ['📡 X Signal', 'Keyword burst: "aesthetic" mentions +180% in 1hr', 'cyan'],
+];
+let toastIdx = 0;
+function scheduleToasts() {
+  setTimeout(() => {
+    const fireToast = () => {
+      const t = AUTO_TOASTS[toastIdx % AUTO_TOASTS.length];
+      toast(t[0], t[1], t[2]);
+      toastIdx++;
+    };
+    fireToast();
+    setInterval(fireToast, 8000);
+  }, 3500);
+}
+
+// ── MODAL HELPERS ───────────────────────────────────────────
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+
+// ── PAGE TABS (scanner) ──────────────────────────────────────
+function switchPage(panelId, tab) {
+  document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page-panel').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(panelId)?.classList.add('active');
+}
+
+// ── SCROLL ANIMATIONS ────────────────────────────────────────
+function initScrollAnimations() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+  document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+}
+
+// ── AUTO UPDATE ──────────────────────────────────────────────
+function startAutoUpdate() {
+  // Update trend scores display every few seconds
+  setInterval(() => {
+    document.querySelectorAll('.metric-val.mv-up').forEach(el => {
+      const base = parseFloat(el.textContent.replace(/[^0-9.]/g,''));
+      if (!isNaN(base)) {
+        const v = Math.max(50, base + (Math.random() - 0.45) * 4);
+        el.textContent = '+' + v.toFixed(1) + '%';
+      }
+    });
+  }, 3500);
+  // Spike bars refresh
+  setInterval(() => {
+    renderSpikes('tt-spikes', '#4f6eff', '#00e5ff');
+    renderSpikes('ig-spikes', '#ff2d9b', '#9b5de5');
+    renderSpikes('yt-spikes', '#FF0000', '#ffb800');
+  }, 5000);
+  // Platform stat nudges
+  const nudgeStat = (id, base, max, suffix='') => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = Math.max(0, base + Math.floor((Math.random() - 0.5) * max));
+    el.textContent = v.toLocaleString() + suffix;
+  };
+  setInterval(() => {
+    nudgeStat('tt-break', 347, 10);
+    nudgeStat('ig-break', 219, 8);
+    nudgeStat('yt-break', 124, 6);
+  }, 6000);
+}
+
+// ── PARALLAX ────────────────────────────────────────────────
+document.addEventListener('mousemove', e => {
+  const x = (e.clientX / window.innerWidth - 0.5) * 18;
+  const y = (e.clientY / window.innerHeight - 0.5) * 18;
+  document.querySelectorAll('.hero-orb').forEach((o, i) => {
+    const f = (i % 2 === 0 ? 1 : -1) * (i * 0.3 + 0.5);
+    o.style.transform = `translate(${x*f}px,${y*f}px)`;
+  });
+});
+
+// ── DASHBOARD REFRESH ────────────────────────────────────────
+function refreshDashboard(btn) {
+  const orig = btn.textContent;
+  btn.textContent = '⟳ Refreshing...';
+  btn.disabled = true;
+  TRENDS.forEach(t => {
+    t.score = Math.max(30, Math.min(99, t.score + Math.floor((Math.random() - 0.45) * 6)));
+    t.velocity = Math.max(20, t.velocity + Math.floor((Math.random() - 0.45) * 12));
+  });
+  setTimeout(() => {
+    renderTrendCards();
+    btn.textContent = orig;
+    btn.disabled = false;
+    toast('↻ Dashboard Refreshed', 'Latest signals loaded', 'green');
+    addLog('ok', 'Dashboard refresh completed — ' + TRENDS.length + ' trends updated');
+  }, 1200);
+}
+</script>
+</body>
+</html>
